@@ -1,0 +1,140 @@
+{
+  "schemas_version": "1.0",
+  "standard_contract": {
+    "ok": "boolean",
+    "status": "Queued|Started|Active|Paused|Completed|Failed|Aborted",
+    "request_id": "string|null",
+    "run_id": "string|null",
+    "resolved_intent": "string|null",
+    "result": "object|null",
+    "artifacts": "array",
+    "telemetry": {
+      "steps_used": "number",
+      "tool_calls_used": "number",
+      "elapsed_ms": "number"
+    },
+    "approval": {
+      "approval_required": "boolean",
+      "approval_status": "not_required|paused|approved|rejected"
+    },
+    "errors": [
+      {
+        "code": "string",
+        "message": "string",
+        "stage": "string",
+        "retryable": "boolean",
+        "details": "object|null",
+        "tool_name": "string|null"
+      }
+    ],
+    "ts": "ISO-8601 string"
+  },
+  "endpoints": [
+    {
+      "name": "brain_v0",
+      "method": "POST",
+      "path": "/webhook/wos/brain/v0",
+      "request": {
+        "type": "object",
+        "required": [
+          "request_id",
+          "intent"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "default": "0.1"
+          },
+          "request_id": {
+            "type": "string"
+          },
+          "intent": {
+            "type": "string",
+            "description": "Intent identifier. Trimmed by Brain."
+          },
+          "input": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "default": {}
+          },
+          "mode": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Optional. Use 'workflow_builder' for WB mode."
+          },
+          "wb_stage": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Optional. propose|test|approve|deploy"
+          },
+          "caps": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Optional caps; v0 ignores or stubs telemetry.",
+            "properties": {
+              "max_tool_calls": {
+                "type": "integer"
+              },
+              "max_steps": {
+                "type": "integer"
+              },
+              "timeout_ms": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "response": {
+        "$ref": "#/standard_contract"
+      }
+    },
+    {
+      "name": "intent_daily_email_digest_v0",
+      "method": "POST",
+      "path": "/webhook/wos/intent/daily_email_digest_v0",
+      "request": {
+        "type": "object",
+        "required": [
+          "request_id",
+          "run_id",
+          "input"
+        ],
+        "properties": {
+          "request_id": {
+            "type": "string"
+          },
+          "run_id": {
+            "type": "string"
+          },
+          "input": {
+            "type": "object"
+          }
+        }
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Workflow was started"
+          }
+        }
+      },
+      "idempotency_and_side_effects": {
+        "notes": [
+          "Brain v0 is NOT idempotent for side-effecting intents (e.g., sends emails). Replaying the same request_id can re-trigger actions.",
+          "Future versions should add dedupe (e.g., store processed request_id/run_id in Canon/DB) for write/side-effect intents."
+        ]
+      }
+    }
+  ]
+}

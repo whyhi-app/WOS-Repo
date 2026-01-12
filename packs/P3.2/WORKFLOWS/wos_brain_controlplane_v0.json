@@ -1,0 +1,708 @@
+{
+  "name": "P3.2_Brain_ControlPlane_v0",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/wos/brain/v0",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": false
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "359c2c1c-cabc-4a50-9ede-8e1be4052ba0",
+      "name": "Webhook",
+      "webhookId": "8b0839a6-edbc-4eef-a690-5c15c06d0516"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "624bdbcf-3c9c-4e75-a23a-1ea893bda1f6",
+              "name": "schema_version",
+              "value": "0.1",
+              "type": "string"
+            },
+            {
+              "id": "7317e124-94ce-47a5-905f-48a912b1289d",
+              "name": "request_id",
+              "value": "={{$json.body.request_id}}",
+              "type": "string"
+            },
+            {
+              "id": "84881a90-47f8-4ce7-b00c-7a981ef95c50",
+              "name": "intent",
+              "value": "={{$json.body.intent}}",
+              "type": "string"
+            },
+            {
+              "id": "ba7b3694-2b34-45b2-b476-b0f7ca73740a",
+              "name": "input",
+              "value": "={{$json.body.input}}",
+              "type": "string"
+            },
+            {
+              "id": "4d16e6d5-8b20-455b-9226-483b110b3c63",
+              "name": "resolved_intent",
+              "value": "={{$json.body.intent.trim()}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {},
+        "includeOtherFields": true
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "28a579cd-60b0-43e3-8587-e5bb38bf8df6",
+      "name": "Set Defaults"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2d7a2888-163a-4a64-9418-8a03c86ed83c",
+              "leftValue": "={{$json.request_id}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "4d2c4223-9562-41e2-92dc-a95f1c942a65",
+              "leftValue": "={{$json.intent}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        576,
+        0
+      ],
+      "id": "1d213fbd-acb6-4e56-998a-2ef9753a0df4",
+      "name": "Validate Required"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6344828a-2760-48f2-b6ef-b37fd35e70c4",
+              "leftValue": "={{$json.mode}}",
+              "rightValue": "workflow_builder",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "a7f8db91-4ef7-4f63-87d2-93de3289d014",
+              "leftValue": "={{$json.wb_stage}}",
+              "rightValue": "deploy",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -336,
+        304
+      ],
+      "id": "f1af7b71-a8ae-46dd-935f-b9fab89ed706",
+      "name": "REQ-WB-001 Guard"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalize Error — standardized failure envelope for Brain v0\n// Expected incoming fields (best-effort):\n// - request_id, run_id, resolved_intent (set earlier via Set Defaults / Set Meta nodes)\n// - optional: errorMessage/message/code/stage/retryable/note/details\n\nconst j = $json || {};\nconst now = new Date().toISOString();\n\nconst request_id = j.request_id ?? j.body?.request_id ?? null;\nconst run_id = j.run_id ?? j.body?.run_id ?? null;\nconst resolved_intent = j.resolved_intent ?? j.intent ?? j.body?.intent ?? null;\n\nconst code = j.code ?? \"BRAIN_ERROR\";\nconst stage = j.stage ?? \"unknown\";\nconst retryable = Boolean(j.retryable ?? false);\n\nconst message =\n  j.errorMessage ??\n  j.message ??\n  \"Brain failed validation/routing/execution.\";\n\nconst note =\n  j.note ??\n  \"Check required fields, routing rules, HTTP node config, and downstream webhook availability.\";\n\nconst details =\n  j.details ?? {\n    request_id,\n    intent: resolved_intent,\n    note,\n  };\n\nreturn [\n  {\n    json: {\n      ok: false,\n      status: \"Failed\",\n      request_id,\n      run_id,\n      resolved_intent,\n      result: null,\n      artifacts: [],\n      telemetry: {\n        steps_used: 0,\n        tool_calls_used: 0,\n        elapsed_ms: 0,\n      },\n      approval: {\n        approval_required: false,\n        approval_status: \"not_required\",\n      },\n      errors: [\n        {\n          code,\n          message,\n          stage,\n          retryable,\n          details,\n          tool_name: null,\n        },\n      ],\n      ts: now,\n    },\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        848,
+        688
+      ],
+      "id": "b2fe4374-4758-4c93-8989-a9fd532dba21",
+      "name": "Normalize Error"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalize Paused — used for HITL gating (REQ-WB-001)\nconst j = $json || {};\nconst now = new Date().toISOString();\n\nconst request_id = j.request_id ?? j.body?.request_id ?? null;\nconst run_id = j.run_id ?? j.body?.run_id ?? null;\nconst resolved_intent = j.resolved_intent ?? j.intent ?? j.body?.intent ?? null;\n\nreturn [\n  {\n    json: {\n      ok: false,\n      status: \"Paused\",\n      request_id,\n      run_id,\n      resolved_intent,\n      result: null,\n      artifacts: [],\n      telemetry: {\n        steps_used: 0,\n        tool_calls_used: 0,\n        elapsed_ms: 0,\n      },\n      approval: {\n        approval_required: true,\n        approval_status: \"paused\",\n      },\n      errors: [\n        {\n          code: \"HITL_REQUIRED\",\n          message: \"REQ-WB-001: Deploy actions are paused pending human approval (HITL).\",\n          stage: \"policy\",\n          retryable: false,\n          details: {\n            request_id,\n            intent: resolved_intent,\n            mode: j.mode ?? null,\n            wb_stage: j.wb_stage ?? null,\n            note: \"Approve or reject before any deploy action is executed.\",\n          },\n          tool_name: null,\n        },\n      ],\n      ts: now,\n    },\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        848,
+        176
+      ],
+      "id": "f48b28c7-bd0e-4ddb-9a5b-a27c92dce33d",
+      "name": "Normalize Paused"
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = Date.now();\nreturn [{\n  ...$json,\n  run_id: `run-${now}-${Math.random().toString(16).slice(2,8)}`,\n  _telemetry_start_ms: now\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "b457e4f4-c3db-41e4-a1f7-779aec0f8d2a",
+      "name": "Initialize Run ID"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.intent.trim()}}",
+                    "rightValue": "daily_email_digest_v0",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "a0d240ef-2794-4305-ab53-53c23e050c99"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -128,
+        352
+      ],
+      "id": "ab1aef71-86c8-4ada-a33e-d04dfe31d2f9",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalize Success (prefers attached meta)\nconst now = new Date().toISOString();\n\nconst request_id = $json.request_id ?? null;\nconst run_id = $json.run_id ?? null;\n\nconst resolved_intent_raw = $json.resolved_intent ?? $json.intent ?? null;\nconst resolved_intent =\n  typeof resolved_intent_raw === \"string\" ? resolved_intent_raw.trim() : resolved_intent_raw;\n\nreturn [{\n  json: {\n    ok: true,\n    status: \"Completed\",\n    request_id,\n    run_id,\n    resolved_intent,\n    result: {\n      statusCode: $json.statusCode ?? null,\n      statusMessage: $json.statusMessage ?? null,\n      body: $json.body ?? null,\n      headers: $json.headers ?? null,\n      error: $json.error ?? null,\n    },\n    artifacts: [],\n    telemetry: { steps_used: 0, tool_calls_used: 0, elapsed_ms: 0 },\n    approval: { approval_required: false, approval_status: \"not_required\" },\n    errors: [],\n    ts: now,\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        848,
+        336
+      ],
+      "id": "c84ad257-9c0d-4010-a957-4f389ebd15d0",
+      "name": "Normalize Success"
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1120,
+        336
+      ],
+      "id": "e8a7716b-9952-4934-b36c-1fd666e999c9",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.whyhi.app/webhook/wos/intent/daily_email_digest_v0",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-WOS-KEY",
+              "value": "CONNECTION"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"request_id\": \"={{$json.request_id}}\",\n  \"run_id\": \"={{$json.run_id}}\",\n  \"input\": \"={{$json.input}}\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        16,
+        528
+      ],
+      "id": "36d54785-dc8d-4c85-b527-38b49729a40c",
+      "name": "daily_email_digest_v0",
+      "retryOnFail": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ba017682-4349-4c22-ac6f-30358598a73a",
+              "name": "schema_version",
+              "value": "0.1",
+              "type": "string"
+            },
+            {
+              "id": "e3aa38af-48f1-4d49-88e3-6b8e84ba445a",
+              "name": "resolve_mode",
+              "value": "strict",
+              "type": "string"
+            },
+            {
+              "id": "55cac4cd-e5b6-4504-9b88-88e24710a886",
+              "name": "mode",
+              "value": "normal",
+              "type": "string"
+            },
+            {
+              "id": "1f35e41b-3ae0-41a4-b7c5-fde4900e3988",
+              "name": "input",
+              "value": "{}",
+              "type": "object"
+            },
+            {
+              "id": "5d5bc0e6-36f0-442a-b79b-90a1847ff72f",
+              "name": "caps.timeout_s",
+              "value": "60",
+              "type": "string"
+            },
+            {
+              "id": "14ba2bdf-1f56-43a0-9fbb-b5ff8efc10e4",
+              "name": "caps.max_steps",
+              "value": "50",
+              "type": "string"
+            },
+            {
+              "id": "3132072e-39ed-4193-95f7-3037fc36fb04",
+              "name": "caps.max_tool_calls",
+              "value": "15",
+              "type": "string"
+            },
+            {
+              "id": "dd8905a6-a8c1-4c44-bfbb-7abcab5cf60a",
+              "name": "caps.max_output_chars",
+              "value": "20000",
+              "type": "string"
+            },
+            {
+              "id": "d3435c68-1d5e-4f61-b6ec-e54fbfd8a95b",
+              "name": "policy.web_research_allowed",
+              "value": "false",
+              "type": "string"
+            },
+            {
+              "id": "66a05131-6c44-415a-8d04-f3fdbcd71c40",
+              "name": "policy.approval_required_for_writes=true",
+              "value": "true",
+              "type": "string"
+            },
+            {
+              "id": "61b82bfe-d0df-4118-8ae3-956735d31c16",
+              "name": "policy.security_class",
+              "value": "CONFIDENTIAL",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        -208
+      ],
+      "id": "9726734d-dc88-4204-8e4a-f65c64ef4265",
+      "name": "Set Defaults manual mapping"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b8a5e5fb-b10e-47a7-82ae-39e8aa640939",
+              "leftValue": "={{$json.statusCode}}",
+              "rightValue": 400,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        512,
+        544
+      ],
+      "id": "0bfd3b0f-4587-4b42-87c6-4e92551ae579",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalize Unknown Intent\nconst now = new Date().toISOString();\n\nconst body = $json.body ?? $json;\nconst request_id = (body.request_id ?? $json.request_id ?? null);\nconst run_id = (body.run_id ?? $json.run_id ?? null);\n\nconst incoming_intent = (body.intent ?? $json.intent ?? null);\nconst intent_clean = typeof incoming_intent === 'string' ? incoming_intent.trim() : incoming_intent;\n\nreturn [\n  {\n    json: {\n      ok: false,\n      status: \"Failed\",\n      request_id,\n      run_id,\n      resolved_intent: intent_clean,\n      result: null,\n      artifacts: [],\n      telemetry: {\n        steps_used: 0,\n        tool_calls_used: 0,\n        elapsed_ms: 0,\n      },\n      approval: {\n        approval_required: false,\n        approval_status: \"not_required\",\n      },\n      errors: [\n        {\n          code: \"INTENT_NOT_FOUND\",\n          message: \"Unknown intent. No routing rule matched.\",\n          stage: \"routing\",\n          retryable: false,\n          details: {\n            request_id,\n            intent: intent_clean,\n            note: \"Add a Switch routing rule for this intent, or fix the intent string.\",\n          },\n          tool_name: null,\n        },\n      ],\n      ts: now,\n    },\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        848,
+        512
+      ],
+      "id": "f7644aa3-230c-4cee-8518-01a6af26feb6",
+      "name": "Normalize Unknown Intent"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e51b03d3-1fc7-414e-b495-016a0c1d4f3e",
+              "name": "request_id",
+              "value": "={{ $node[\"Set Defaults\"].json.request_id }}",
+              "type": "string"
+            },
+            {
+              "id": "cbeab037-351f-465a-88d8-514dd96e2fdd",
+              "name": "run_id",
+              "value": "={{ $node[\"Initialize Run ID\"].json.run_id }}",
+              "type": "string"
+            },
+            {
+              "id": "c15a3e76-a284-444e-af2f-24d58e65ca25",
+              "name": "intent",
+              "value": "={{ $node[\"Set Defaults\"].json.intent }}",
+              "type": "string"
+            },
+            {
+              "id": "c3be4707-acea-4124-857d-55729e595b54",
+              "name": "resolved_intent",
+              "value": "={{ $node[\"Set Defaults\"].json.intent }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        512
+      ],
+      "id": "f1debc82-78a1-4d51-85ca-a025104cbe49",
+      "name": "Attach Meta (daily newsletter digest)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0118da70-67c2-484a-8502-994dcfc87043",
+              "name": "mode",
+              "value": "={{\n  (($json.mode ?? \"\").toString().trim() !== \"\")\n    ? $json.mode.toString().trim()\n    : (($json.body?.mode ?? \"\").toString().trim())\n}}",
+              "type": "string"
+            },
+            {
+              "id": "b931b80e-5b4e-4bfe-81ef-025ed6cfaaa7",
+              "name": "wb_stage",
+              "value": "={{\n  (($json.wb_stage ?? \"\").toString().trim() !== \"\")\n    ? $json.wb_stage.toString().trim()\n    : (($json.body?.wb_stage ?? \"\").toString().trim())\n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -512,
+        304
+      ],
+      "id": "d1968827-1d59-4a51-ab17-a5d5bffcc21f",
+      "name": "WB Coalesce"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Set Defaults",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Defaults": {
+      "main": [
+        [
+          {
+            "node": "Initialize Run ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Required": {
+      "main": [
+        [
+          {
+            "node": "Normalize Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "WB Coalesce",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "REQ-WB-001 Guard": {
+      "main": [
+        [
+          {
+            "node": "Normalize Paused",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize Run ID": {
+      "main": [
+        [
+          {
+            "node": "Validate Required",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "daily_email_digest_v0",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Normalize Unknown Intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Success": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Paused": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Error": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "daily_email_digest_v0": {
+      "main": [
+        [
+          {
+            "node": "Attach Meta (daily newsletter digest)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Normalize Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Normalize Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Unknown Intent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach Meta (daily newsletter digest)": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WB Coalesce": {
+      "main": [
+        [
+          {
+            "node": "REQ-WB-001 Guard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "0bdd89f5-f00f-40dc-9a6d-efdd9e8a7c60",
+  "meta": {
+    "instanceId": "0239ac923949e74ef6e4e5006e111fc060979a1c83b694a314eba3c9a0fb1b39"
+  },
+  "id": "wvPbO49K9DaeeEBy",
+  "tags": []
+}

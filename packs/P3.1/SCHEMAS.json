@@ -1,0 +1,212 @@
+{
+  "meta": {
+    "artifact_id": "P3.1-SCHEMAS-001",
+    "title": "Schemas — Phase 3.1 Brain + Gate + Canon Tool Contracts (v0)",
+    "phase": "3.1",
+    "type": "SCHEMAS",
+    "status": "LOCKED",
+    "version": "v1.1",
+    "date_locked": "2026-01-08",
+    "owner": "Tom",
+    "supersedes": "P3.1_ExportPack_v1.0"
+  },
+  "standard_contract": {
+    "ok_example": {
+      "ok": true,
+      "result": {},
+      "error": null
+    },
+    "error_example": {
+      "ok": false,
+      "result": null,
+      "error": {
+        "code": "INVALID_INPUT",
+        "message": "Human readable summary",
+        "details": {},
+        "retryable": false
+      }
+    },
+    "error_code_enum_v0": [
+      "INVALID_INPUT",
+      "NOT_FOUND",
+      "TIMEOUT",
+      "UPSTREAM_ERROR",
+      "POLICY_BLOCKED",
+      "INTERNAL_ERROR"
+    ]
+  },
+  "idempotency_and_side_effects": {
+    "read_tools_idempotent": [
+      "Canon_Search_v0",
+      "Canon_Get_v0"
+    ],
+    "write_tools_non_idempotent_by_default": [
+      "Notion_Publish_Brief_v0"
+    ],
+    "future_optional_idempotency_key": {
+      "name": "client_request_id",
+      "notes": "May be stored in Notion to prevent duplicate publishes across clients."
+    },
+    "side_effect_boundary_rule": "No writes occur before Approval Gate approval."
+  },
+  "contracts": {
+    "status_enum_v0": [
+      "Completed",
+      "NeedsApproval",
+      "Failed"
+    ],
+    "gate_decision_enum_v0": [
+      "approve",
+      "reject",
+      "edit"
+    ],
+    "Canon_Search_v0": {
+      "input_schema": {
+        "type": "object",
+        "required": [
+          "query"
+        ],
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1
+          },
+          "domain": {
+            "type": "string"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "k": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20
+          },
+          "include_deprecated": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "Canon_Get_v0": {
+      "input_schema": {
+        "type": "object",
+        "required": [
+          "artifact_id"
+        ],
+        "properties": {
+          "artifact_id": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "examples": {
+      "Brain_Run_Request_v0": {
+        "brief_type": "investor",
+        "target_name": "Jane Doe",
+        "target_org": "Example Ventures",
+        "target_url": "https://www.linkedin.com/in/janedoe",
+        "your_goal": "Warm intro → 20-min call about WhyHi + pre-seed fit",
+        "context": "Met at FoundersBoost LA; interested in consumer comms",
+        "destination": "NOTION_DB:BRIEFS_V0",
+        "web_research_enabled": false,
+        "client_request_id": "demo-001",
+        "client": {
+          "name": "chatgpt"
+        }
+      },
+      "Brain_Run_Response_v0": {
+        "status": "NeedsApproval",
+        "requires_approval": true,
+        "result": {
+          "draft_brief_markdown": "## One-liner...\n\n## What we know (Canon)...",
+          "notion_url": null
+        },
+        "next_actions": [
+          "Review the draft brief in the approval message and approve, reject, or edit."
+        ],
+        "tools_called": [
+          "Canon_Search_v0",
+          "Canon_Get_v0"
+        ],
+        "approval_payload": {
+          "destination": "NOTION_DB:BRIEFS_V0",
+          "properties": {
+            "title": "Investor Brief — Jane Doe (Example Ventures)",
+            "brief_type": "investor",
+            "target_name": "Jane Doe",
+            "target_org": "Example Ventures",
+            "target_url": "https://www.linkedin.com/in/janedoe",
+            "date": "2026-01-08",
+            "tags": [
+              "investor",
+              "speedrun",
+              "pre-seed"
+            ],
+            "client_request_id": "demo-001"
+          },
+          "content_markdown": "## One-liner...\n...",
+          "canon_refs": [
+            {
+              "artifact_id": "CANON-EXAMPLE-001",
+              "title": "WhyHi Pitch / Positioning Artifact"
+            }
+          ],
+          "web_refs": [],
+          "proposed_action": "publish_notion_page"
+        },
+        "error": null
+      },
+      "Canon_Search_v0_output": {
+        "ok": true,
+        "result": {
+          "results": [
+            {
+              "artifact_id": "CANON-123",
+              "title": "WhyHi Solution Slide Copy",
+              "summary": "WhyHi makes calling intentional...",
+              "tags": [
+                "pitch",
+                "solution"
+              ],
+              "domain": "WhyHi",
+              "type": "Spec",
+              "status": "Approved",
+              "updated_at": "2026-01-08",
+              "body_link": "notion://page/..."
+            }
+          ]
+        },
+        "error": null
+      },
+      "Canon_Get_v0_output": {
+        "ok": true,
+        "result": {
+          "artifact": {
+            "artifact_id": "CANON-123",
+            "title": "WhyHi Solution Slide Copy",
+            "summary": "WhyHi makes calling intentional...",
+            "body": "Full artifact body markdown...",
+            "tags": [
+              "pitch",
+              "solution"
+            ],
+            "domain": "WhyHi",
+            "type": "Spec",
+            "status": "Approved",
+            "updated_at": "2026-01-08",
+            "source": "Notion"
+          }
+        },
+        "error": null
+      }
+    }
+  }
+}
