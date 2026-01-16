@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "wos": {
+      "type": "stdio",
+      "command": "python3",
+      "args": [
+        "/Users/tomwynn/Documents/WhyHi_Server/WOS-Repo/src/wos/server.py"
+      ],
+      "env": {}
+    }
+  }
+}
