@@ -34,7 +34,7 @@ class DailyDigestHandler:
             n8n_executor: N8nExecutor instance for calling workflows
         """
         self.n8n_executor = n8n_executor
-        self.workflow_name = "daily_email_digest"
+        self.workflow_name = "Daily_Newsletter_Digest"
     
     def execute(self, request_id: str, execution_id: str, 
                 intent_input: Dict[str, Any], 

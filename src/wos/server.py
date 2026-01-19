@@ -353,22 +353,32 @@ async def handle_execute_intent(args: dict) -> list[TextContent]:
     
     # Format response
     status = response.get("status")
-    
+
     if status == "Completed":
-        result = response.get("output", {})
+        result = response.get("result", {})
         return [TextContent(
             type="text",
             text=f"✅ Intent '{intent}' completed successfully\n\n{json.dumps(result, indent=2)}"
         )]
     elif status == "PendingApproval":
+        approval_info = response.get('approval', {})
+        reason = approval_info.get('reason', 'Approval required')
         return [TextContent(
             type="text",
-            text=f"⏸️ Intent '{intent}' requires approval\n\nReason: {response.get('human_readable_reason', 'Approval required')}\n\nRequest ID: {request_id}"
+            text=f"⏸️ Intent '{intent}' requires approval\n\nReason: {reason}\n\nRequest ID: {request_id}"
         )]
     elif status == "Failed":
+        # Extract error from errors array
+        errors = response.get('errors', [])
+        if errors:
+            error_code = errors[0].get('code', 'Unknown')
+            error_message = errors[0].get('message', 'Unknown error')
+        else:
+            error_code = 'Unknown'
+            error_message = 'Unknown error'
         return [TextContent(
             type="text",
-            text=f"❌ Intent '{intent}' failed\n\nError: {response.get('error_code', 'Unknown')}\nMessage: {response.get('human_readable_reason', 'Unknown error')}"
+            text=f"❌ Intent '{intent}' failed\n\nError Code: {error_code}\nMessage: {error_message}\n\nFull Response:\n{json.dumps(response, indent=2)}"
         )]
     else:
         return [TextContent(
