@@ -61,7 +61,7 @@ class WOSComponents:
         # Phase 3.2: n8n Executor
         logger.info("Initializing n8n Executor...")
         self.n8n_executor = N8nExecutor(
-            base_url=os.getenv("N8N_URL", "https://n8n.whyhi.app"),
+            n8n_base_url=os.getenv("N8N_URL", "https://n8n.whyhi.app"),
             api_key=os.getenv("N8N_API_KEY")
         )
         logger.info("✅ n8n Executor ready")
@@ -522,8 +522,8 @@ if __name__ == "__main__":
         
         async with stdio_server() as (read_stream, write_stream):
             await app.run(
-                read_stream, 
-                write_stream, 
+                read_stream,
+                write_stream,
                 app.create_initialization_options()
             )
     
