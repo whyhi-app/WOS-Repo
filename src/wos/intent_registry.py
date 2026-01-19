@@ -152,10 +152,16 @@ class IntentRegistry:
     def get_workflows_for_intent(self, intent_id: str) -> List[Dict]:
         """Get all n8n workflows mapped to an intent"""
         cursor = self.conn.cursor()
-        cursor.execute("SELECT * FROM n8n_workflows WHERE intent_id = ? AND active = 1", 
+        cursor.execute("SELECT * FROM n8n_workflows WHERE intent_id = ? AND active = 1",
                       (intent_id,))
         return [dict(row) for row in cursor.fetchall()]
-    
+
+    def list_intents(self) -> List[Dict]:
+        """List all registered intents"""
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT * FROM intents ORDER BY created_at DESC")
+        return [dict(row) for row in cursor.fetchall()]
+
     def log_execution(self, execution_id: str, request_id: str, intent_id: str,
                      status: str, result: Dict = None, error: str = None,
                      execution_time_ms: int = None) -> bool:

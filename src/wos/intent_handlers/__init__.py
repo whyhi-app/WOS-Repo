@@ -73,12 +73,19 @@ def get_handler_factory(canon_tools, n8n_executor):
         n8n_executor: N8nExecutor instance
 
     Returns:
-        Function that takes intent_id and returns handler
+        Function that takes intent_id, n8n_executor, approval_gate, canon_tools and returns handler
     """
+    # Store closure variables with different names
+    default_canon_tools = canon_tools
+    default_n8n_executor = n8n_executor
 
-    def factory(intent_id: str):
+    def factory(intent_id: str, n8n_executor=None, approval_gate=None, canon_tools=None):
+        # Use the passed parameters if provided, otherwise use the closure defaults
         return get_handler(
-            intent_id=intent_id, n8n_executor=n8n_executor, canon_tools=canon_tools
+            intent_id=intent_id,
+            n8n_executor=n8n_executor or default_n8n_executor,
+            approval_gate=approval_gate,
+            canon_tools=canon_tools or default_canon_tools
         )
 
     return factory

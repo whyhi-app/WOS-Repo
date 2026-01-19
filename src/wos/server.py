@@ -390,7 +390,7 @@ async def handle_list_intents() -> list[TextContent]:
     intent_list = "\n\n".join([
         f"**{intent['name']}** (`{intent['intent_id']}`)\n"
         f"Description: {intent['description']}\n"
-        f"Handler: {intent['handler']}\n"
+        f"Handler: {intent['handler_module']}\n"
         f"Approval Required: {intent.get('approval_required', False)}"
         for intent in intents
     ])
@@ -475,25 +475,36 @@ async def handle_canon_store(args: dict) -> list[TextContent]:
 async def handle_register_intent(args: dict) -> list[TextContent]:
     """Register new intent (Founder authority)"""
     wos = get_wos()
-    
+
     intent_id = args.get("intent_id")
     name = args.get("name")
+    version = args.get("version", "0.1")  # Default version
     description = args.get("description")
     handler = args.get("handler")
     approval_required = args.get("approval_required", False)
+    timeout_seconds = args.get("timeout_seconds", 30)
     n8n_workflow_id = args.get("n8n_workflow_id")
-    
+
     logger.info(f"Registering intent: {intent_id}")
-    
+
     success = wos.intent_registry.register_intent(
         intent_id=intent_id,
         name=name,
+        version=version,
         description=description,
-        required_inputs=[],  # TODO: Parse from args
-        handler=handler,
+        handler_module=handler,
         approval_required=approval_required,
-        n8n_workflow_id=n8n_workflow_id
+        timeout_seconds=timeout_seconds
     )
+
+    # If n8n workflow ID provided, map it
+    if success and n8n_workflow_id:
+        wos.intent_registry.map_workflow(
+            workflow_id=f"{intent_id}_workflow",
+            intent_id=intent_id,
+            n8n_workflow_name=n8n_workflow_id,
+            n8n_webhook_url=None
+        )
     
     if success:
         return [TextContent(

@@ -19,14 +19,18 @@ class ApprovalGate:
     For v0, this is a stub that can be extended for HITL via Notion wait gates.
     """
     
-    def __init__(self, approval_storage=None):
+    def __init__(self, notion_db_id=None, notion_api_key=None):
         """
         Initialize approval gate
-        
+
         Args:
-            approval_storage: Backend for storing approval requests (Notion, etc)
+            notion_db_id: Notion database ID for approval tracking
+            notion_api_key: Notion API key for authentication
         """
-        self.approval_storage = approval_storage
+        self.notion_db_id = notion_db_id
+        self.notion_api_key = notion_api_key
+        # TODO: Initialize Notion client if credentials provided
+        self.approval_storage = None  # Placeholder for future Notion integration
     
     def check_approval(self, request_id: str, intent_id: str, 
                       intent_input: Dict[str, Any]) -> Dict[str, Any]:
