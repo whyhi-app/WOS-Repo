@@ -1,0 +1,86 @@
+{
+  "name": "Apple Reminders to Notion Sync",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/wos/capture/apple-reminders/v0",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c16634af-7212-4717-99d0-78247e499b6b",
+      "name": "Webhook",
+      "webhookId": "67b81280-7692-4d2c-841b-8008634e93be"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "235632f5-307e-804f-ac20-fcad655dba8a",
+          "mode": "list",
+          "cachedResultName": "Tasks-masterlist",
+          "cachedResultUrl": "https://www.notion.so/235632f5307e804fac20fcad655dba8a"
+        },
+        "title": "tasks-masterlist",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Name|title",
+              "title": "={{$json.body.text}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        200,
+        0
+      ],
+      "id": "4a229a8f-4fe4-4ab9-a517-6b7afd650c95",
+      "name": "Create Notion Task",
+      "credentials": {
+        "notionApi": {
+          "id": "0Fa9t54KbxC0hNU8",
+          "name": "Notion account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Create Notion Task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "saveDataSuccessExecution": "all",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "d9d8b4b6-d593-48f4-a16f-07000a81905c-fixed",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0239ac923949e74ef6e4e5006e111fc060979a1c83b694a314eba3c9a0fb1b39"
+  },
+  "id": "i35JCa57g4AMG2YS",
+  "tags": []
+}

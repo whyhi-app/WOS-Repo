@@ -9,9 +9,9 @@ import uuid
 from typing import Dict, Any
 from datetime import datetime
 
-logger = logging.getLogger("wos.intent_handlers.daily_digest")
+logger = logging.getLogger("wos.intent_handlers.daily_newsletter_digest")
 
-class DailyDigestHandler:
+class DailyNewsletterDigestHandler:
     """
     Daily Email Digest Handler v0
     
@@ -191,6 +191,6 @@ class DailyDigestHandler:
 
 
 # Handler factory function
-def create_daily_digest_handler(n8n_executor) -> DailyDigestHandler:
+def create_daily_newsletter_digest_handler(n8n_executor) -> DailyNewsletterDigestHandler:
     """Factory function to create handler"""
-    return DailyDigestHandler(n8n_executor)
+    return DailyNewsletterDigestHandler(n8n_executor)

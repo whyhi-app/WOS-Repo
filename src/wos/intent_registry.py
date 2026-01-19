@@ -41,11 +41,24 @@ class IntentRegistry:
                 approval_required BOOLEAN DEFAULT 0,
                 timeout_seconds INTEGER DEFAULT 30,
                 max_retries INTEGER DEFAULT 2,
+                execution_mode TEXT DEFAULT 'wos_managed',
+                notes TEXT,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                 updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
                 owner TEXT DEFAULT 'wos'
             )
         """)
+
+        # Add new columns if they don't exist (for existing databases)
+        try:
+            cursor.execute("ALTER TABLE intents ADD COLUMN execution_mode TEXT DEFAULT 'wos_managed'")
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+
+        try:
+            cursor.execute("ALTER TABLE intents ADD COLUMN notes TEXT")
+        except sqlite3.OperationalError:
+            pass  # Column already exists
         
         # n8n workflow mappings table
         cursor.execute("""
@@ -94,21 +107,41 @@ class IntentRegistry:
         self.conn.commit()
         logger.info(f"Intent registry initialized at {self.db_path}")
     
-    def register_intent(self, intent_id: str, name: str, version: str, 
+    def register_intent(self, intent_id: str, name: str, version: str,
                        description: str, handler_module: str,
                        approval_required: bool = False,
-                       timeout_seconds: int = 30) -> bool:
-        """Register a new intent"""
+                       timeout_seconds: int = 30,
+                       execution_mode: str = 'wos_managed',
+                       notes: str = None) -> bool:
+        """
+        Register a new intent
+
+        Args:
+            intent_id: Unique intent identifier
+            name: Intent name
+            version: Intent version
+            description: Intent description
+            handler_module: Python module path for handler
+            approval_required: Whether approval is required before execution
+            timeout_seconds: Execution timeout in seconds
+            execution_mode: Execution mode - one of:
+                - 'wos_managed': WOS Brain triggers (default)
+                - 'autonomous_cron': n8n Cron trigger
+                - 'autonomous_webhook': n8n email/webhook trigger
+                - 'manual': User triggers in n8n UI
+            notes: Optional notes about the intent
+        """
         try:
             cursor = self.conn.cursor()
             cursor.execute("""
-                INSERT INTO intents (intent_id, name, version, description, 
-                                    handler_module, approval_required, timeout_seconds)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (intent_id, name, version, description, handler_module, 
-                  approval_required, timeout_seconds))
+                INSERT INTO intents (intent_id, name, version, description,
+                                    handler_module, approval_required, timeout_seconds,
+                                    execution_mode, notes)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (intent_id, name, version, description, handler_module,
+                  approval_required, timeout_seconds, execution_mode, notes))
             self.conn.commit()
-            logger.info(f"Registered intent: {name}")
+            logger.info(f"Registered intent: {name} (mode: {execution_mode})")
             return True
         except sqlite3.IntegrityError as e:
             logger.error(f"Failed to register intent {name}: {e}")
@@ -162,6 +195,27 @@ class IntentRegistry:
         cursor.execute("SELECT * FROM intents ORDER BY created_at DESC")
         return [dict(row) for row in cursor.fetchall()]
 
+    def list_intents_by_mode(self, execution_mode: str) -> List[Dict]:
+        """
+        List all intents with a specific execution mode
+
+        Args:
+            execution_mode: Execution mode to filter by
+                - 'wos_managed': WOS Brain triggers
+                - 'autonomous_cron': n8n Cron trigger
+                - 'autonomous_webhook': n8n email/webhook trigger
+                - 'manual': User triggers in n8n UI
+
+        Returns:
+            List of intent dictionaries matching the execution mode
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "SELECT * FROM intents WHERE execution_mode = ? ORDER BY created_at DESC",
+            (execution_mode,)
+        )
+        return [dict(row) for row in cursor.fetchall()]
+
     def log_execution(self, execution_id: str, request_id: str, intent_id: str,
                      status: str, result: Dict = None, error: str = None,
                      execution_time_ms: int = None) -> bool:
@@ -203,15 +257,41 @@ INITIAL_INTENTS = [
         "description": "Generate prospect/investor brief with Canon retrieval",
         "handler_module": "wos.intent_handlers.brief_generator",
         "approval_required": True,
-        "timeout_seconds": 60
+        "timeout_seconds": 60,
+        "execution_mode": "wos_managed",
+        "notes": None
     },
     {
         "intent_id": "daily_email_digest_v0",
         "name": "daily_email_digest",
         "version": "0.1",
-        "description": "Generate and send daily email digest",
-        "handler_module": "wos.intent_handlers.daily_digest",
+        "description": "Generate and send daily newsletter digest",
+        "handler_module": "wos.intent_handlers.daily_newsletter_digest",
         "approval_required": False,
-        "timeout_seconds": 30
+        "timeout_seconds": 30,
+        "execution_mode": "wos_managed",
+        "notes": "WOS-managed daily newsletter digest. Triggered by Brain on schedule."
+    },
+    {
+        "intent_id": "gmail_to_notion_task_v0",
+        "name": "gmail_to_notion_task",
+        "version": "0.1",
+        "description": "Auto-create Notion task from forwarded email",
+        "handler_module": "none",
+        "approval_required": False,
+        "timeout_seconds": 30,
+        "execution_mode": "autonomous_webhook",
+        "notes": "Triggered by email arrival in Gmail. Creates task in Notion tasks-masterlist database."
+    },
+    {
+        "intent_id": "apple_reminders_to_notion_sync_v0",
+        "name": "apple_reminders_to_notion_sync",
+        "version": "0.1",
+        "description": "Sync Apple Reminders to Notion twice daily",
+        "handler_module": "none",
+        "approval_required": False,
+        "timeout_seconds": 60,
+        "execution_mode": "autonomous_webhook",
+        "notes": "Triggered by iOS Shortcuts automation (twice daily). Fetches Apple Reminders from 'Notion' list (last 12h), creates tasks in Notion tasks-masterlist."
     }
 ]

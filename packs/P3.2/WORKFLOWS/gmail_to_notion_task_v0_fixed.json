@@ -1,0 +1,355 @@
+{
+  "name": "Gmail to Notion Task",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "value": 12,
+              "unit": "hours"
+            }
+          ]
+        },
+        "filters": {
+          "q": "to:tom+task@whyhi.app -in:chats"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -192,
+        80
+      ],
+      "id": "012083d1-9bce-4d27-8302-2f6d70f1c477",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "VRjRQ5k8Y50QK1s9",
+          "name": "Gmail tom@whyhi.app"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "235632f5-307e-804f-ac20-fcad655dba8a",
+          "mode": "list",
+          "cachedResultName": "Tasks-masterlist",
+          "cachedResultUrl": "https://www.notion.so/235632f5307e804fac20fcad655dba8a"
+        },
+        "title": "={{$json.subject}}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Notes|rich_text",
+              "textContent": "={{$json.notes}}"
+            },
+            {
+              "key": "URL|url",
+              "urlValue": "={{$json.gmailUrl}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        16,
+        240
+      ],
+      "id": "774566fb-0b03-4270-8a5d-e6d0b76acbe1",
+      "name": "Create a database page",
+      "credentials": {
+        "notionApi": {
+          "id": "0Fa9t54KbxC0hNU8",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function b64urlDecode(str) {\n  if (!str) return \"\";\n  str = str.replace(/-/g, \"+\").replace(/_/g, \"/\");\n  while (str.length % 4) str += \"=\";\n  return Buffer.from(str, \"base64\").toString(\"utf8\");\n}\n\nfunction stripHtml(html) {\n  if (!html) return \"\";\n  return html\n    .replace(/<style[\\s\\S]*?<\\/style>/gi, \"\")\n    .replace(/<script[\\s\\S]*?<\\/script>/gi, \"\")\n    .replace(/<\\/p>/gi, \"\\n\")\n    .replace(/<br\\s*\\/?>/gi, \"\\n\")\n    .replace(/<[^>]+>/g, \"\")\n    .replace(/&nbsp;/g, \" \")\n    .replace(/&amp;/g, \"&\")\n    .replace(/&lt;/g, \"<\")\n    .replace(/&gt;/g, \">\")\n    .replace(/&quot;/g, '\"')\n    .replace(/&#39;/g, \"'\")\n    .trim();\n}\n\n// Handles BOTH:\n// A) Raw Gmail API style: payload.headers = [{name,value}], payload.parts, payload.body.data\n// B) n8n simplified style: Subject/From/To at top-level or headers object, snippet/body/text fields\nfunction getSubject(msg) {\n  // common top-level variants\n  const direct =\n    msg.subject ||\n    msg.Subject ||\n    msg.headers?.subject ||\n    msg.headers?.Subject;\n\n  if (direct && String(direct).trim()) return String(direct).trim();\n\n  // raw Gmail API headers array\n  const headersArr = msg.payload?.headers;\n  if (Array.isArray(headersArr)) {\n    const h = headersArr.find(\n      (x) => (x.name || \"\").toLowerCase() === \"subject\"\n    );\n    if (h?.value) return String(h.value).trim();\n  }\n\n  // sometimes n8n gives headers as an object of raw header-lines\n  const headersObj = msg.headers;\n  if (headersObj && typeof headersObj === \"object\") {\n    // try some common keys\n    const maybe = headersObj[\"subject\"] || headersObj[\"Subject\"];\n    if (maybe) return String(maybe).replace(/^Subject:\\s*/i, \"\").trim();\n  }\n\n  return \"\";\n}\n\nfunction collectParts(part, out = []) {\n  if (!part) return out;\n  out.push(part);\n  const parts = part.parts || [];\n  for (const p of parts) collectParts(p, out);\n  return out;\n}\n\nfunction getBody(msg) {\n  // n8n simplified candidates (different node versions emit different fields)\n  const simplifiedCandidates = [\n    msg.textPlain,\n    msg.text,\n    msg.body,\n    msg.Body,\n    msg.snippet, // last resort\n  ].filter(Boolean);\n\n  // If any candidate is non-empty and not just whitespace, use it.\n  for (const c of simplifiedCandidates) {\n    const s = String(c).trim();\n    if (s) return s;\n  }\n\n  // Raw Gmail API: payload.body.data\n  const payload = msg.payload || {};\n  if (payload?.body?.data) {\n    const decoded = b64urlDecode(payload.body.data).trim();\n    if (decoded) return decoded;\n  }\n\n  // Raw Gmail API multipart: prefer text/plain\n  const parts = collectParts(payload);\n  const plainPart = parts.find(\n    (p) =>\n      (p.mimeType || \"\").toLowerCase() === \"text/plain\" &&\n      p?.body?.data\n  );\n  if (plainPart?.body?.data) {\n    const decoded = b64urlDecode(plainPart.body.data).trim();\n    if (decoded) return decoded;\n  }\n\n  // Fallback: text/html -> strip\n  const htmlPart = parts.find(\n    (p) =>\n      (p.mimeType || \"\").toLowerCase() === \"text/html\" &&\n      p?.body?.data\n  );\n  if (htmlPart?.body?.data) {\n    const html = b64urlDecode(htmlPart.body.data);\n    const stripped = stripHtml(html);\n    if (stripped) return stripped;\n  }\n\n  return \"\";\n}\n\nconst msg = $json; // this Code node MUST be connected to \"Get a message\"\n\nconst subject = getSubject(msg) || \"Email task\";\nconst body = getBody(msg) || \"\";\n\nreturn [\n  {\n    gmail_id: msg.id || \"\",\n    threadId: msg.threadId || \"\",\n    subject,\n    body,\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "965ccec8-db43-417b-a2b3-a9ba0f77e63e",
+      "name": "Decode Code"
+    },
+    {
+      "parameters": {
+        "operation": "removeLabels",
+        "messageId": "={{$node[\"Gmail Trigger\"].json.id}}\n",
+        "labelIds": [
+          "Label_2537289956457899394"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        240
+      ],
+      "id": "20e2b12b-0d4f-4431-bab0-94edb27701ef",
+      "name": "Remove label from message",
+      "webhookId": "52e3986a-5642-4d2f-af2d-78e237869fee",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "VRjRQ5k8Y50QK1s9",
+          "name": "Gmail tom@whyhi.app"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{$node[\"Gmail Trigger\"].json.id}}\n",
+        "labelIds": [
+          "Label_4920107124006479390"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        624,
+        240
+      ],
+      "id": "2da81159-63de-414c-a01b-f2c81c67bfab",
+      "name": "Add label to message",
+      "webhookId": "5d0d0a4e-2865-4229-ba5a-626f02abc49a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "VRjRQ5k8Y50QK1s9",
+          "name": "Gmail tom@whyhi.app"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{$node[\"Merge Triggers\"].json.id}}",
+        "simple": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        256,
+        -192
+      ],
+      "id": "8d31d932-a59c-4680-be64-4118550e9af9",
+      "name": "Get a message",
+      "webhookId": "b8a22213-0fc6-44eb-a73a-6e48a7ef10f7",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "VRjRQ5k8Y50QK1s9",
+          "name": "Gmail tom@whyhi.app"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare Notion-safe fields (truncate Notes + include Gmail link)\n\n// Inputs expected from your upstream nodes:\n// - subject (string)  -> email subject for Notion Title\n// - body (string)     -> decoded email body text\n// - threadId (string) -> Gmail threadId (preferred for a stable link)\n// - id (string)       -> Gmail message id (fallback)\n\nconst subject = ($json.subject || \"\").trim();\nconst bodyRaw = ($json.body || \"\").trim();\n\n// Keep just first ~6 lines (adjust if you want)\nconst lines = bodyRaw.split(/\\r?\\n/);\nconst firstLines = lines.slice(0, 6).join(\"\\n\").trim();\n\n// Hard truncate to stay comfortably under 2000 char Notion limit\n// (Leave room for link text + some extra)\nconst MAX = 1800;\nlet notes = firstLines.length > MAX ? firstLines.slice(0, MAX) + \"…\" : firstLines;\n\n// Gmail link (thread link is stable)\nconst threadId = $json.threadId || \"\";\nconst msgId = $json.gmail_id || $json.id || \"\";\n\n// Most reliable in practice: thread link\n// If threadId is missing, fall back to search by rfc822msgid is harder, so use messageId style link.\n// Gmail URLs can vary; threadId is best.\nlet gmailUrl = \"\";\nif (threadId) {\n  gmailUrl = `https://mail.google.com/mail/u/0/#inbox/${threadId}`;\n} else if (msgId) {\n  gmailUrl = `https://mail.google.com/mail/u/0/#all/${msgId}`;\n}\n\n// Always include link line if we have it\nif (gmailUrl) {\n  notes = `${notes}\\n\\nGmail: ${gmailUrl}`;\n}\n\nreturn [\n  {\n    subject: subject || \"Email task\",\n    notes,\n    gmailUrl,\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "4cb3fd2a-4730-4fa8-8bcf-f610dbf779f4",
+      "name": "Truncate Gmail"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        96,
+        16
+      ],
+      "id": "e2c22d10-ba4e-4f98-9d7b-82ea46eaf14d",
+      "name": "Merge Triggers"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\"ok\":true,\"status\":\"Completed\",\"message\":\"Task created in Notion\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        832,
+        240
+      ],
+      "id": "c2eb874a-07ae-4eec-a740-83426592251a",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/wos/intent/gmail_to_notion_task_v0",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -336,
+        -144
+      ],
+      "id": "bd645e69-a7c0-4765-ac10-3a555e186605",
+      "name": "intent webhook",
+      "webhookId": "a1945da6-8038-4a31-828b-5c8096690711"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{ \"message\": \"Workflow was started\" }",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -128,
+        -144
+      ],
+      "id": "02c337a9-45f0-4b89-818f-85d69b7fbe8c",
+      "name": "Ack"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Merge Triggers",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Decode Code": {
+      "main": [
+        [
+          {
+            "node": "Truncate Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a database page": {
+      "main": [
+        [
+          {
+            "node": "Remove label from message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove label from message": {
+      "main": [
+        [
+          {
+            "node": "Add label to message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a message": {
+      "main": [
+        [
+          {
+            "node": "Decode Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Truncate Gmail": {
+      "main": [
+        [
+          {
+            "node": "Create a database page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "intent webhook": {
+      "main": [
+        [
+          {
+            "node": "Ack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ack": {
+      "main": [
+        [
+          {
+            "node": "Merge Triggers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Triggers": {
+      "main": [
+        [
+          {
+            "node": "Get a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add label to message": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "d1730b05-5c71-4eeb-9d76-379fdd33b7c6-fixed",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0239ac923949e74ef6e4e5006e111fc060979a1c83b694a314eba3c9a0fb1b39"
+  },
+  "id": "ZdYuzNMFSHUnKDbb",
+  "tags": []
+}
