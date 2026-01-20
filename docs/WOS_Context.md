@@ -698,25 +698,48 @@ git commit -m "Add <workflow> n8n workflow"
 - Common commands
 - Updated **when architecture/patterns change**
 
-### When to Update Each File
+### Automated Documentation Updates
 
-**Update WOS_Status.md:**
-- After completing an agent
-- After each sprint
-- When starting new work
-- When hitting blockers
-- When deployment status changes
+**IMPORTANT: Claude handles documentation updates automatically.**
 
-**Update WOS_Context.md:**
-- When adding new execution modes
-- When changing agent patterns
-- When adding new integrations
-- When making architectural decisions
-- When adding new commands/workflows
-- When constraints change (budget, rate limits)
+**During working sessions:**
+- Claude tracks what's built/changed
+- At natural break points or end of session, Claude asks: "Update docs?"
+- User can also prompt: "update status", "update context", or "update docs"
 
-### Pre-Commit Hook Reminder
-After creating WOS_Context.md, a pre-commit hook will remind you to update BOTH files when committing significant changes.
+**When user says "update status":**
+1. Claude reads current WOS_Status.md
+2. Updates with session changes (completed agents, sprint progress, blockers, next steps)
+3. Commits with message: "Update WOS_Status.md - [brief summary] ([date])"
+
+**When user says "update context":**
+1. Claude reads current WOS_Context.md
+2. Updates architecture/patterns/integrations based on changes made
+3. Commits with descriptive message
+
+**When user says "update docs":**
+1. Claude updates BOTH files
+2. Commits both
+
+**Pre-commit hook = safety net:**
+- If user manually commits code without updating docs, hook warns them
+- Hook doesn't auto-update, just reminds
+
+**What triggers updates:**
+
+WOS_Status.md:
+- Completing an agent
+- Sprint progress changes
+- New blockers or decisions
+- End of working session
+
+WOS_Context.md:
+- New execution modes
+- Changed agent patterns
+- New integrations
+- Architectural decisions
+- New commands/workflows
+- Constraint changes
 
 ---
 
