@@ -98,8 +98,8 @@ print()
 # Step 2: Generate personalized message
 print("Step 2: Generating personalized outreach message...")
 
-# Determine if email or DM
-is_email = "email" in creator["contact_method"].lower() or creator["email"]
+# Determine if email or DM (prioritize Contact Method field)
+is_email = "email" in creator["contact_method"].lower()
 platform = creator["contact_method"].split()[0] if creator["contact_method"] else "Unknown"
 
 if is_email:
