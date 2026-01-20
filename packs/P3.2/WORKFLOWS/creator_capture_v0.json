@@ -1,0 +1,154 @@
+{
+  "name": "Creator Capture v0",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "wos/intent/creator_capture_v0",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "creator-capture-webhook"
+    },
+    {
+      "parameters": {
+        "url": "={{$json.body.url}}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "fetch-page",
+      "name": "Fetch Page Content",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract creator information from page content\nconst url = $input.item.json.body.url;\nconst html = $input.item.json.data || '';\n\n// Initialize creator data\nlet creator = {\n  url: url,\n  name: '',\n  email: '',\n  company: '',\n  platform: '',\n  contact_method: 'DM',\n  notes: `Captured from: ${url}`\n};\n\n// Detect platform from URL\nif (url.includes('twitter.com') || url.includes('x.com')) {\n  creator.platform = 'Twitter/X';\n  creator.contact_method = 'Twitter DM';\n  // Extract handle from URL\n  const handleMatch = url.match(/(?:twitter\\.com|x\\.com)\\/([^\\/\\?]+)/);\n  if (handleMatch) {\n    creator.name = '@' + handleMatch[1];\n  }\n} else if (url.includes('instagram.com')) {\n  creator.platform = 'Instagram';\n  creator.contact_method = 'Instagram DM';\n  const handleMatch = url.match(/instagram\\.com\\/([^\\/\\?]+)/);\n  if (handleMatch) {\n    creator.name = '@' + handleMatch[1];\n  }\n} else if (url.includes('youtube.com') || url.includes('youtu.be')) {\n  creator.platform = 'YouTube';\n  creator.contact_method = 'YouTube Comment/Email';\n  // Try to extract channel name from HTML\n  const channelMatch = html.match(/<meta property=\"og:title\" content=\"([^\"]+)\">/);\n  if (channelMatch) {\n    creator.name = channelMatch[1];\n  }\n} else if (url.includes('tiktok.com')) {\n  creator.platform = 'TikTok';\n  creator.contact_method = 'TikTok DM';\n  const handleMatch = url.match(/tiktok\\.com\\/@([^\\/\\?]+)/);\n  if (handleMatch) {\n    creator.name = '@' + handleMatch[1];\n  }\n} else if (url.includes('linkedin.com')) {\n  creator.platform = 'LinkedIn';\n  creator.contact_method = 'LinkedIn Message';\n  const nameMatch = html.match(/<title>([^<]+)<\\/title>/);\n  if (nameMatch) {\n    creator.name = nameMatch[1].replace(' | LinkedIn', '').trim();\n  }\n} else {\n  // Article/blog - likely journalist\n  creator.platform = 'Article/Blog';\n  creator.contact_method = 'Email';\n  \n  // Try to extract author name\n  const authorPatterns = [\n    /<meta name=\"author\" content=\"([^\"]+)\">/,\n    /<span class=\"author[^>]*>([^<]+)<\\/span>/,\n    /By ([A-Z][a-z]+ [A-Z][a-z]+)/,\n    /<meta property=\"article:author\" content=\"([^\"]+)\">/\n  ];\n  \n  for (const pattern of authorPatterns) {\n    const match = html.match(pattern);\n    if (match) {\n      creator.name = match[1].trim();\n      break;\n    }\n  }\n  \n  // Try to extract email\n  const emailMatch = html.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\\.[a-zA-Z0-9_-]+)/);\n  if (emailMatch) {\n    creator.email = emailMatch[1];\n  }\n  \n  // Try to extract publication/company\n  const pubMatch = html.match(/<meta property=\"og:site_name\" content=\"([^\"]+)\">/);\n  if (pubMatch) {\n    creator.company = pubMatch[1];\n  }\n}\n\n// If no name extracted, use domain\nif (!creator.name) {\n  const domain = new URL(url).hostname.replace('www.', '');\n  creator.name = domain;\n}\n\nreturn { json: creator };"
+      },
+      "id": "extract-creator",
+      "name": "Extract Creator Info",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": "23d632f5307e8001a1d6fb31be92d59e",
+        "title": "={{$json.name}}",
+        "properties": {
+          "customProperty": [
+            {
+              "key": "URL",
+              "textContent": "={{$json.url}}"
+            },
+            {
+              "key": "Email",
+              "textContent": "={{$json.email}}"
+            },
+            {
+              "key": "Company",
+              "textContent": "={{$json.company}}"
+            },
+            {
+              "key": "Contact Method",
+              "textContent": "={{$json.contact_method}}"
+            },
+            {
+              "key": "Notes",
+              "textContent": "={{$json.notes}}"
+            },
+            {
+              "key": "Outreach Status",
+              "selectValue": "New Lead"
+            }
+          ]
+        }
+      },
+      "id": "create-crm-entry",
+      "name": "Create CRM Entry",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [850, 300],
+      "credentials": {
+        "notionApi": {
+          "id": "notion-wos",
+          "name": "Notion WOS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"ok\": true, \"status\": \"Creator added to CRM\", \"name\": \"{{$json.name}}\", \"platform\": \"{{$json.platform}}\", \"contact_method\": \"{{$json.contact_method}}\"}"
+      },
+      "id": "respond-success",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Fetch Page Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Page Content": {
+      "main": [
+        [
+          {
+            "node": "Extract Creator Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Creator Info": {
+      "main": [
+        [
+          {
+            "node": "Create CRM Entry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create CRM Entry": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-01-19T00:00:00.000Z",
+  "versionId": "1"
+}

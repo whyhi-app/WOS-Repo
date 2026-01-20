@@ -293,5 +293,27 @@ INITIAL_INTENTS = [
         "timeout_seconds": 60,
         "execution_mode": "autonomous_webhook",
         "notes": "Triggered by iOS Shortcuts automation (twice daily). Fetches Apple Reminders from 'Notion' list (last 12h), creates tasks in Notion tasks-masterlist."
+    },
+    {
+        "intent_id": "creator_capture_v0",
+        "name": "creator_capture",
+        "version": "0.1",
+        "description": "Capture creator links and populate CRM with contact info",
+        "handler_module": "none",
+        "approval_required": False,
+        "timeout_seconds": 30,
+        "execution_mode": "autonomous_webhook",
+        "notes": "Triggered by webhook (iOS Shortcut share sheet). Extracts creator info from URL (Twitter, Instagram, YouTube, TikTok, LinkedIn, articles), determines contact method (DM vs email), stores in Notion CRM with 'New Lead' status."
+    },
+    {
+        "intent_id": "creator_outreach_v0",
+        "name": "creator_outreach",
+        "version": "0.1",
+        "description": "Generate personalized creator outreach with HITL approval",
+        "handler_module": "wos.intent_handlers.creator_outreach",
+        "approval_required": True,
+        "timeout_seconds": 600,
+        "execution_mode": "wos_managed",
+        "notes": "WOS-managed outreach to creators/journalists. Queries CRM by status, generates personalized messages referencing original content, routes through Approval Gate, updates CRM status on approval."
     }
 ]
