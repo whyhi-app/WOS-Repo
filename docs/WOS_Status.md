@@ -1,8 +1,8 @@
 # WOS Status Report
 
-**Last Updated:** January 20, 2026 (Evening - Creator Capture Deployment In Progress)
+**Last Updated:** January 21, 2026 (Early Morning - Creator Capture Debugged)
 **Version:** Phase 3.4 (MCP + Brain + Handlers + Canon + Documentation)
-**Status:** 🟡 Infrastructure + First Growth Agent Deploying (n8n ✅, iOS Shortcut ⚠️)
+**Status:** 🟢 Infrastructure + First Growth Agent Functional (Needs iOS Shortcut Config)
 **Launch Target:** Mid-March 2026
 
 ---
@@ -23,7 +23,7 @@
   - Creator Outreach (WOS)
   - Gmail to Notion Task (Autonomous)
   - Apple Reminders Sync (Autonomous)
-  - Creator Capture (Autonomous - ready to deploy)
+  - Creator Capture (Autonomous - functional, needs iOS setup)
 
 ---
 
@@ -82,12 +82,17 @@
 - **Purpose:** Capture creator/journalist links for outreach pipeline
 - **Features:**
   - Webhook receives URL from iOS share sheet
-  - Extracts creator info (name, platform, contact method)
-  - Platform detection (Twitter, Instagram, YouTube, TikTok, LinkedIn, articles)
+  - URL-based extraction (no page fetch - avoids anti-scraping)
+  - Platform detection (Twitter, Instagram, YouTube, TikTok, LinkedIn, Facebook, articles)
+  - Extracts handles/names from profile URLs
+  - Smart handling of video/post URLs (saves URL with follow-up instructions)
   - Auto-populates Notion CRM with "New Lead" status
   - Determines contact method (DM vs email)
-- **Status:** Built, ready to deploy
+  - "Capture now, process later" workflow for quick saves
+- **Status:** ✅ Functional (n8n working, iOS shortcut needs final config)
+- **Files:** `packs/P3.2/WORKFLOWS/creator_capture_v0_simple.json`
 - **Integration:** Notion CRM with Outreach Status field
+- **Next Step:** Import simplified workflow to n8n, test iOS shortcut
 
 ### 4. Creator Outreach ✅ (WOS-Managed)
 - **Purpose:** Generate personalized outreach to creators/journalists
@@ -137,15 +142,20 @@
 - **Filter:** Reminders created "today" only (prevents duplicates)
 - **Status:** Fixed and deployed (voice-to-Notion inbox working!)
 
-### 4. Creator Capture 🟡 (Autonomous - Deployment In Progress)
+### 4. Creator Capture ✅ (Autonomous - Functional)
 - **Trigger:** Webhook (iOS Shortcut share sheet)
-- **Function:** Captures creator links (Twitter, Instagram, YouTube, TikTok, LinkedIn, articles), extracts contact info, populates CRM
-- **n8n Workflow:** Creator Capture v0 at `/wos/intent/creator_capture_v0`
+- **Function:** Captures creator links (Twitter, Instagram, YouTube, TikTok, LinkedIn, Facebook, articles), extracts info from URLs, populates CRM
+- **n8n Workflow:** Creator Capture v0 Simple at `/wos/intent/creator_capture_v0`
 - **Execution Mode:** `autonomous_webhook` (iOS share → n8n webhook)
 - **CRM:** Notion Creator CRM (23d632f5307e8001a1d6fb31be92d59e)
-- **Status:** n8n deployed and tested ✅ (curl verified), iOS Shortcut needs rebuild ⚠️
-- **Issue:** Shortcut sends empty URL (notes field working), need to rebuild with Shortcut Input variable
-- **Next Step:** Rebuild iOS shortcut with proper URL capture from Share Sheet
+- **Approach:** URL-based extraction (no page fetch) to avoid anti-scraping 301 errors
+- **Handles:**
+  - ✅ Profile URLs: Extracts @handles/names automatically
+  - ✅ Video/Post URLs: Saves with follow-up instructions in Notes
+  - ✅ Platform detection and contact method assignment
+- **Status:** Debugged and functional ✅ Webhook receiving data correctly, extraction working
+- **Next Step:** Import creator_capture_v0_simple.json to n8n, test end-to-end with iOS Shortcut
+- **Debug Session:** Jan 21, 2026 (fixed webhook data structure, removed page fetch, added smart URL extraction)
 
 ### 5. Creator Outreach ✅ (WOS-Managed)
 - **Execute:** `~/.local/bin/claude "execute the creator_outreach intent"`

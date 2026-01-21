@@ -300,6 +300,19 @@ OPENAI_API_KEY=<your-key>
 - Tool use standardization
 - Better developer experience
 
+### 7. URL-Based Extraction for Social Platforms
+**Decision:** Extract creator info from URLs directly instead of fetching page content
+
+**Rationale:**
+- Social platforms (YouTube, Instagram, LinkedIn, Facebook) have anti-scraping protections that cause 301 redirects and login walls
+- Profile URLs contain enough info to extract handles, names, and platform type
+- "Capture now, process later" workflow: Save URLs immediately, let user manually add details during batch processing
+- Avoids complexity of browser automation, proxies, or API quotas
+- Fast, reliable, and cost-free extraction
+- Workflow: Creator Capture saves URL + basic info → User reviews/enriches → Creator Outreach generates personalized messages
+
+**Implementation:** `creator_capture_v0_simple.json` uses JavaScript URL parsing only (no HTTP requests)
+
 ---
 
 ## Agent Patterns
