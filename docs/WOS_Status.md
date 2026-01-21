@@ -1,8 +1,8 @@
 # WOS Status Report
 
-**Last Updated:** January 21, 2026 (Early Morning - Creator Capture Debugged)
+**Last Updated:** January 21, 2026 (Creator Capture Parked - Sprint 2 Blocked)
 **Version:** Phase 3.4 (MCP + Brain + Handlers + Canon + Documentation)
-**Status:** 🟢 Infrastructure + First Growth Agent Functional (Needs iOS Shortcut Config)
+**Status:** 🟡 Development Paused - Strategic Growth Planning Needed
 **Launch Target:** Mid-March 2026
 
 ---
@@ -248,42 +248,52 @@
 
 ---
 
-## **NEXT SESSION**
+## **CURRENT BLOCKERS & NEXT STEPS**
 
-**Fix iOS Shortcut + Test Creator Pipeline + Start Sprint 2**
+**Status:** WOS development paused for strategic growth/marketing planning
 
-### Fix Creator Capture iOS Shortcut (5 min)
-**Issue:** Shortcut sends `{"url":"","notes":"Davis"}` - URL is empty
-**Solution:** Rebuild shortcut with 6 simple actions:
-1. **Get URLs** from Share Sheet
-2. **Ask for Input** → "Add notes?"
-3. **Text** → Build JSON: `{"url":"[URLs]","notes":"[Provided Input]"}`
-4. **Get Contents of URL** → POST to `https://n8n.whyhi.app/webhook/wos/intent/creator_capture_v0`
-   - Method: POST
-   - Add header: `Content-Type: application/json`
-   - Request Body: JSON → select Text variable from step 3
-5. **Show Notification** → "Added to CRM!"
+### Sprint 2 - Blocked (All 3 Agents)
 
-**Verify:** n8n workflow already working (tested via curl, successfully created @naval in CRM)
+**Support Triage + Escalation:**
+- ❌ Blocked: Needs ticketing system decision (Linear vs Zendesk vs Help Scout)
+- Status: Dev team conversation in progress
 
-### Test Creator Outreach (15 min)
-1. Verify creators captured in Notion CRM
-2. Mark one as "Draft Ready"
-3. Execute: `~/.local/bin/claude "execute the creator_outreach intent with status_filter='Draft Ready' and limit=1"`
-4. Review approval in Notion
-5. Test approval/rejection flow
+**Incident Commander:**
+- ❌ Blocked: Needs crash monitoring decision (Sentry vs Crashlytics)
+- Status: Waiting for dev team input
 
-### Start Sprint 2: Support Triage Agent
+**App Store Reviews Monitor:**
+- ❌ Blocked: Cannot build until after Feb 4, 2026
+- Reason: Apple Developer account migration from personal to company email
+- Timeline: Feb 4+ account migration → Dev team migrates MVP data → Then build agent
+- Impact: Not needed until March launch anyway
 
-**Before starting:**
-1. Decide on ticketing system with dev team (Linear vs Zendesk vs Help Scout)
-2. Check Crashlytics status with dev team
-3. Get necessary API keys
+### Strategic Planning Required (Before Resuming Development)
 
-**Then build:**
-- Support Triage + Escalation (2-3 days)
-- Incident Commander (2 days)
-- App Store Reviews Monitor (2-3 days)
+**Growth/Marketing strategy decisions needed:**
+- Social media platform selection (Buffer vs alternatives)
+- Content strategy and calendar (what, when, where)
+- Pre-launch content library planning
+- Video content specs (feature demos for Day 1)
+- Community moderation policies and workflows
+- Inbound/outbound content management approach
+- Growth task prioritization
+
+**Recommendation:**
+- Work with claude.ai to complete strategic planning
+- Define requirements and priorities
+- Then return to Claude Code for technical implementation
+
+### Backlog Items (Low Priority)
+
+**Creator Capture iOS Shortcut** (Moved to BACKLOG.md)
+- n8n workflow functional and tested
+- iOS shortcut needs 5-minute rebuild
+- Manual CRM entry works fine for now
+
+**Outreach Template Improvements** (In BACKLOG.md)
+- Fix template selection logic (Contact Method field priority)
+- Update messaging for launch (currently pre-launch placeholders)
 
 ---
 
@@ -306,10 +316,10 @@ Agent → Approval Gate → Notion Page (Pending) → Human Review → Approved/
 
 **Repository:** /Users/tomwynn/Documents/WhyHi_Server/WOS-Repo
 **Latest Commits:**
-- `17d57f6` - Simplify Session Starter - Claude reads files automatically
-- `9fdda6c` - Add WOS documentation system (Context + Session Starter)
-- `e239a81` - Add multi-account Gmail support for outreach sending
-- `a7b3819` - Add Creator Pipeline agent (Capture + Outreach)
-- `bae68c6` - Add Approval Gate with Notion integration (Sprint 1)
+- `dffa29a` - Add Creator Capture iOS Shortcut to backlog
+- `52b7e33` - Fix Creator Capture workflow - URL-based extraction (no page fetch)
+- `937701e` - WIP: Creator Capture deployment (n8n working, iOS shortcut pending)
+- `2c33c91` - Update Daily Newsletter Digest status - fully operational
+- `ec07aa9` - Rename daily_email_digest to daily_newsletter_digest
 
 See full documentation in WOS_Context.md and this file.
