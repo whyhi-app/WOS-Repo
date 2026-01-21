@@ -113,10 +113,14 @@
 
 ### 1. Daily Newsletter Digest ✅ (WOS-Managed)
 - **Execute:** `~/.local/bin/claude "execute the daily_newsletter_digest intent"`
-- **Function:** Fetches, categorizes, digests newsletters from Gmail
+- **Function:** Fetches, categorizes, digests newsletters from Gmail (wynntom@gmail + tom@whyhi.app)
 - **n8n Workflow:** Daily_Newsletter_Digest
-- **Execution Mode:** `wos_managed` (Brain triggers)
-- **Status:** Tested and working end-to-end
+- **Execution Mode:** `wos_managed` (Brain triggers) + Scheduled (daily at midnight)
+- **Webhook Path:** `/wos/intent/daily_newsletter_digest_v0`
+- **Status:** Fully operational
+  - OAuth token refreshed for wynntom@gmail account (Jan 20, 2026)
+  - Date filter added to both Gmail nodes (last 24 hours only)
+  - Sends categorized digest (Product, Growth, Operations, Finance) to tom@whyhi.app
 
 ### 2. Gmail to Notion Task ✅ (Autonomous)
 - **Trigger:** Gmail polling (every 12 hours)
