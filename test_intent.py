@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test script to execute daily_email_digest intent directly
+Test script to execute daily_newsletter_digest intent directly
 """
 import os
 import sys
@@ -20,7 +20,7 @@ from wos.intent_handlers import get_handler_factory
 def test_daily_digest():
     """Test daily digest execution"""
 
-    print("=== Testing Daily Email Digest Intent ===\n")
+    print("=== Testing Daily Newsletter Digest Intent ===\n")
 
     # Initialize components
     print("Initializing components...")
@@ -57,7 +57,7 @@ def test_daily_digest():
     # Build request
     request = {
         "request_id": f"test_{datetime.utcnow().timestamp()}",
-        "intent": "daily_email_digest",  # Use name, not intent_id
+        "intent": "daily_newsletter_digest",  # Use name, not intent_id
         "input": {}
     }
 

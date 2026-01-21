@@ -112,7 +112,7 @@
 ## **OPERATIONAL AGENTS**
 
 ### 1. Daily Newsletter Digest ✅ (WOS-Managed)
-- **Execute:** `~/.local/bin/claude "execute the daily_email_digest intent"`
+- **Execute:** `~/.local/bin/claude "execute the daily_newsletter_digest intent"`
 - **Function:** Fetches, categorizes, digests newsletters from Gmail
 - **n8n Workflow:** Daily_Newsletter_Digest
 - **Execution Mode:** `wos_managed` (Brain triggers)

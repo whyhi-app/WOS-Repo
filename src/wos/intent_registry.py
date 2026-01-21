@@ -262,8 +262,8 @@ INITIAL_INTENTS = [
         "notes": None
     },
     {
-        "intent_id": "daily_email_digest_v0",
-        "name": "daily_email_digest",
+        "intent_id": "daily_newsletter_digest_v0",
+        "name": "daily_newsletter_digest",
         "version": "0.1",
         "description": "Generate and send daily newsletter digest",
         "handler_module": "wos.intent_handlers.daily_newsletter_digest",

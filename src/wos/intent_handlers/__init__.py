@@ -14,7 +14,7 @@ from wos.intent_handlers.creator_outreach import create_handler as create_creato
 
 # Handler registry - maps intent_id to handler factory
 HANDLER_REGISTRY = {
-    "daily_email_digest_v0": {
+    "daily_newsletter_digest_v0": {
         "factory": create_daily_newsletter_digest_handler,
         "name": "Daily Newsletter Digest",
         "version": "0.1",

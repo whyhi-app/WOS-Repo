@@ -80,7 +80,7 @@ Autonomous Agents:
 ```json
 {
   "request_id": "string",
-  "intent": "string (e.g., 'daily_email_digest')",
+  "intent": "string (e.g., 'daily_newsletter_digest')",
   "input": {},
   "mode": "string (optional)",
   "wb_stage": "string (optional)"
@@ -191,7 +191,7 @@ WOS-Repo/
 │       ├── SCHEMAS.json           # Data schemas
 │       └── WORKFLOWS/             # n8n workflow JSONs
 │           ├── wos_brain_controlplane_v0.json
-│           ├── wos_intent_daily_email_digest_v0.json
+│           ├── wos_intent_daily_newsletter_digest_v0.json
 │           ├── gmail_to_notion_task_v0_fixed.json
 │           ├── apple_reminders_to_notion_sync_v0_fixed.json
 │           └── creator_capture_v0.json
@@ -542,7 +542,7 @@ def get_handler_factory(canon_tools, n8n_executor):
 - Start Claude Code: `claude` (in repo directory)
 - MCP server auto-starts
 - Tools available immediately
-- Example: `execute the daily_email_digest intent`
+- Example: `execute the daily_newsletter_digest intent`
 
 ### Canon Index Usage
 
@@ -594,7 +594,7 @@ for r in results:
 ~/.local/bin/claude
 
 # Execute intent (natural language)
-execute the daily_email_digest intent
+execute the daily_newsletter_digest intent
 
 # Execute with parameters
 execute the creator_outreach intent with status_filter='Draft Ready' and limit=2

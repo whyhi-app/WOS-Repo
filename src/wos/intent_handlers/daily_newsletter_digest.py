@@ -1,5 +1,5 @@
 """
-Phase 3.3 Intent Handler: daily_email_digest_v0
+Phase 3.3 Intent Handler: daily_newsletter_digest_v0
 Executes daily newsletter digest workflow
 Pulls emails, categorizes by WhyHi business relevance, returns digest
 """
@@ -13,8 +13,8 @@ logger = logging.getLogger("wos.intent_handlers.daily_newsletter_digest")
 
 class DailyNewsletterDigestHandler:
     """
-    Daily Email Digest Handler v0
-    
+    Daily Newsletter Digest Handler v0
+
     Orchestrates the daily newsletter digest workflow:
     1. Fetches emails from Gmail (wynntom@gmail + tom@whyhi.app)
     2. Filters by labels + deduplicates
@@ -34,7 +34,7 @@ class DailyNewsletterDigestHandler:
             n8n_executor: N8nExecutor instance for calling workflows
         """
         self.n8n_executor = n8n_executor
-        self.workflow_name = "Daily_Newsletter_Digest"
+        self.workflow_name = "wos/intent/daily_newsletter_digest_v0"
     
     def execute(self, request_id: str, execution_id: str, 
                 intent_input: Dict[str, Any], 
