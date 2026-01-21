@@ -1,8 +1,8 @@
 # WOS Status Report
 
-**Last Updated:** January 20, 2026 (Afternoon - Documentation System Complete)
+**Last Updated:** January 20, 2026 (Evening - Creator Capture Deployment In Progress)
 **Version:** Phase 3.4 (MCP + Brain + Handlers + Canon + Documentation)
-**Status:** 🟢 Infrastructure + Documentation System + First Growth Agent Operational
+**Status:** 🟡 Infrastructure + First Growth Agent Deploying (n8n ✅, iOS Shortcut ⚠️)
 **Launch Target:** Mid-March 2026
 
 ---
@@ -137,13 +137,15 @@
 - **Filter:** Reminders created "today" only (prevents duplicates)
 - **Status:** Fixed and deployed (voice-to-Notion inbox working!)
 
-### 4. Creator Capture ✅ (Autonomous)
+### 4. Creator Capture 🟡 (Autonomous - Deployment In Progress)
 - **Trigger:** Webhook (iOS Shortcut share sheet)
 - **Function:** Captures creator links (Twitter, Instagram, YouTube, TikTok, LinkedIn, articles), extracts contact info, populates CRM
-- **n8n Workflow:** Creator Capture v0
+- **n8n Workflow:** Creator Capture v0 at `/wos/intent/creator_capture_v0`
 - **Execution Mode:** `autonomous_webhook` (iOS share → n8n webhook)
-- **CRM:** Notion (with Outreach Status field)
-- **Status:** Built and ready to deploy (needs n8n import + iOS Shortcut setup)
+- **CRM:** Notion Creator CRM (23d632f5307e8001a1d6fb31be92d59e)
+- **Status:** n8n deployed and tested ✅ (curl verified), iOS Shortcut needs rebuild ⚠️
+- **Issue:** Shortcut sends empty URL (notes field working), need to rebuild with Shortcut Input variable
+- **Next Step:** Rebuild iOS shortcut with proper URL capture from Share Sheet
 
 ### 5. Creator Outreach ✅ (WOS-Managed)
 - **Execute:** `~/.local/bin/claude "execute the creator_outreach intent"`
@@ -238,21 +240,28 @@
 
 ## **NEXT SESSION**
 
-**Deploy Creator Pipeline + Start Sprint 2**
+**Fix iOS Shortcut + Test Creator Pipeline + Start Sprint 2**
 
-### Deploy Creator Capture (10 min)
-1. Import `creator_capture_v0.json` to n8n
-2. Activate workflow
-3. Get webhook URL from n8n
-4. Create iOS Shortcut (see setup instructions below)
-5. Test by sharing a creator link
+### Fix Creator Capture iOS Shortcut (5 min)
+**Issue:** Shortcut sends `{"url":"","notes":"Davis"}` - URL is empty
+**Solution:** Rebuild shortcut with 6 simple actions:
+1. **Get URLs** from Share Sheet
+2. **Ask for Input** → "Add notes?"
+3. **Text** → Build JSON: `{"url":"[URLs]","notes":"[Provided Input]"}`
+4. **Get Contents of URL** → POST to `https://n8n.whyhi.app/webhook/wos/intent/creator_capture_v0`
+   - Method: POST
+   - Add header: `Content-Type: application/json`
+   - Request Body: JSON → select Text variable from step 3
+5. **Show Notification** → "Added to CRM!"
+
+**Verify:** n8n workflow already working (tested via curl, successfully created @naval in CRM)
 
 ### Test Creator Outreach (15 min)
-1. Install notion-client: `pip install -r requirements.txt`
-2. Add some creators to CRM with "Draft Ready" status
-3. Execute: `~/.local/bin/claude "execute the creator_outreach intent with status_filter='Draft Ready' and limit=2"`
+1. Verify creators captured in Notion CRM
+2. Mark one as "Draft Ready"
+3. Execute: `~/.local/bin/claude "execute the creator_outreach intent with status_filter='Draft Ready' and limit=1"`
 4. Review approval in Notion
-5. Approve/reject to test full workflow
+5. Test approval/rejection flow
 
 ### Start Sprint 2: Support Triage Agent
 
