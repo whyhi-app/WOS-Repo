@@ -52,6 +52,20 @@ Items tracked here are also in Notion tasks-masterlist with Context: "Backlog"
 
 ---
 
+## iOS Integration - Creator Capture Shortcut
+
+**Priority:** Low (workflow functional, manual entry works)
+**Effort:** 5 minutes
+**Added:** Jan 21, 2026
+
+- [ ] Fix Creator Capture iOS Shortcut configuration
+  - Issue: Shortcut sends empty URL in payload
+  - Solution: Rebuild with 6 actions (documented in Creator_Capture_Setup.md)
+  - n8n workflow already working (tested via curl)
+  - Benefit: One-tap capture from share sheet vs manual CRM entry
+
+---
+
 ## Agents - Template Improvements
 
 **Priority:** Before launch outreach
