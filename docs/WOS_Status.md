@@ -275,17 +275,20 @@
 
 ## **OPERATIONAL AGENTS**
 
-### 1. Daily Newsletter Digest ✅ (Autonomous)
+### 1. Daily Newsletter Digest ✅ (Autonomous - Growth)
 - **Trigger:** Schedule (daily at midnight)
 - **Function:** Fetches, categorizes, digests newsletters from Gmail tom@whyhi.app Queue label (emails from both accounts copied via Apple Mail)
+- **Category:** Growth - incoming marketing, event invitations, and public-facing opportunities
 - **n8n Workflow:** Daily_Newsletter_Digest
 - **Execution Mode:** `autonomous_scheduled` (n8n timer, no webhook/Brain trigger)
 - **Status:** Fully operational
   - Simplified to single Gmail source (tom@whyhi.app) after confirming Apple Mail copies emails from both accounts (Jan 22, 2026)
   - Removed dual Gmail nodes, routing logic, and account-specific stamping for cleaner flow
   - Removed Intent Webhook and WOS Brain integration - pure scheduled automation (Jan 22, 2026)
-  - Filters for last 24 hours with proper date expression
-  - Sends categorized digest (Product, Growth, Operations, Finance) to tom@whyhi.app
+  - Filters for last 3 days (72 hours) to capture recently-labeled emails while preventing repeated content
+  - Uses GPT-4.1-mini with enhanced prompt including WOS context
+  - Sends categorized digest (Product, Growth, Operations, Finance, Events) to tom@whyhi.app
+  - Events category casts a wide net - includes ALL LA startup/tech events for networking opportunities
 
 ### 2. Gmail to Notion Task ✅ (Autonomous)
 - **Trigger:** Gmail polling (every 12 hours)
