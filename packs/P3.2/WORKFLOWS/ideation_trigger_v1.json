@@ -1,0 +1,202 @@
+{
+  "name": "Ideation Trigger v1",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "name": "Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "id": "schedule-trigger"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": "edbf92f3d884478aa27e11d1c6c929ca",
+        "simple": false,
+        "options": {
+          "filter": {
+            "filters": [
+              {
+                "key": "Ideation Status",
+                "type": "select",
+                "condition": "equals",
+                "selectValue": "Sent to COS"
+              },
+              {
+                "key": "Action Type",
+                "type": "multi_select",
+                "condition": "contains",
+                "multiSelectValue": "💡 Content Ideation"
+              }
+            ]
+          },
+          "sort": [
+            {
+              "key": "Relevance Score",
+              "direction": "descending"
+            }
+          ]
+        },
+        "limit": 5
+      },
+      "name": "Query Content Capture",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "id": "query-notion",
+      "credentials": {
+        "notionApi": {
+          "id": "notion-wos",
+          "name": "Notion WOS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.length }}",
+              "operation": "largerEqual",
+              "value2": 1
+            }
+          ]
+        }
+      },
+      "name": "Check if Entries Found",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 300],
+      "id": "check-entries"
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/wos/execute",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": []
+        },
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"intent_id\": \"content_idea_miner_v1\",\n  \"intent_input\": {\n    \"limit\": 5,\n    \"min_relevance_score\": 3\n  }\n}",
+        "options": {}
+      },
+      "name": "Trigger Content Idea Miner",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 250],
+      "id": "trigger-wos",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wos-api-key",
+          "name": "WOS API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "=✅ Ideation complete!\n\nProcessed: {{ $json.entries_processed }} entries\nIdeas generated: {{ $json.ideas_generated }}\n\nArtifact: {{ $json.artifact_uri }}",
+        "options": {}
+      },
+      "name": "Log Success",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1050, 250],
+      "id": "log-success"
+    },
+    {
+      "parameters": {
+        "content": "No entries found with 'Sent to COS' status",
+        "options": {}
+      },
+      "name": "Log No Entries",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [850, 350],
+      "id": "log-no-entries"
+    }
+  ],
+  "connections": {
+    "Schedule": {
+      "main": [
+        [
+          {
+            "node": "Query Content Capture",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Content Capture": {
+      "main": [
+        [
+          {
+            "node": "Check if Entries Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Entries Found": {
+      "main": [
+        [
+          {
+            "node": "Trigger Content Idea Miner",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log No Entries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Content Idea Miner": {
+      "main": [
+        [
+          {
+            "node": "Log Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-01-22T00:00:00.000Z",
+  "versionId": "1"
+}
