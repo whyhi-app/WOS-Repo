@@ -8,7 +8,7 @@
 
 ## What This Workflow Does
 
-The `ideation_trigger_v1` workflow runs every 15 minutes and:
+The `ideation_trigger_v1` workflow runs twice daily (3am & 3pm) and:
 
 1. **Polls Content & Creator Capture** database for entries with:
    - `Ideation Status = "Sent to COS"`
@@ -72,7 +72,7 @@ The workflow needs two credentials:
    - Set `Relevance Score` to 4 or 5
 4. **Change status** to trigger ideation:
    - Set `Ideation Status` to "Sent to COS"
-5. **Wait up to 15 minutes** or manually trigger the workflow
+5. **Wait for next run** (3am or 3pm) or manually trigger the workflow
 6. **Check the Ideas Queue** - you should see 2-5 new ideas generated!
 
 ### Check Results:
@@ -93,12 +93,16 @@ The workflow needs two credentials:
 
 ### Schedule Interval
 
-Default: Every 15 minutes
+Default: Twice daily at 3am and 3pm
 
 To change:
 1. Click on "Schedule" node
-2. Modify "Minutes Interval" field
-3. Recommended: 15-30 minutes (balance between responsiveness and API costs)
+2. Switch to "Cron Expression" mode
+3. Current expression: `0 3,15 * * *` (3am and 3pm daily)
+4. Examples:
+   - Once daily at 9am: `0 9 * * *`
+   - Three times daily (9am, 3pm, 9pm): `0 9,15,21 * * *`
+   - Every 2 hours: `0 */2 * * *`
 
 ### Entry Limit
 
