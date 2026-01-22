@@ -41,7 +41,7 @@ Normalization rules:
 Routing is implemented as an n8n Switch over `resolved_intent`.
 
 v0 routes:
-- `daily_email_digest_v0` → HTTP Request to `/webhook/wos/intent/daily_email_digest_v0`
+- `daily_newsletter_digest_v0` → HTTP Request to `/webhook/wos/intent/daily_newsletter_digest_v0`
 - Fallback → Normalize Unknown Intent (INTENT_NOT_FOUND)
 
 ## 4. Policy guard (REQ-WB-001)

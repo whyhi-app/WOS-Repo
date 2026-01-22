@@ -12,7 +12,7 @@
 
 **3 Files** implementing Phase 3.3 Intent Handlers:
 
-### 1. **daily_digest.py** — Daily Email Digest Handler
+### 1. **daily_digest.py** — Daily Newsletter Digest Handler
 Orchestrates the daily newsletter digest workflow.
 
 **Key Features:**
@@ -24,18 +24,18 @@ Orchestrates the daily newsletter digest workflow.
 
 **Handler Flow:**
 ```
-Brain routes "daily_email_digest" intent
+Brain routes "daily_newsletter_digest" intent
   ↓
 DailyDigestHandler.execute()
   ↓
-Calls n8n workflow: POST /webhook/daily_email_digest
+Calls n8n workflow: POST /webhook/daily_newsletter_digest
   ↓
 n8n flow:
   - Fetch emails from wynntom@gmail + tom@whyhi.app
   - Dedup, extract content + URLs
   - Send to GPT-4.1-mini
   - Categorize: Product | Growth | Operations | Finance
-  - Email digest to tom@whyhi.app
+  - Email newsletter digest to tom@whyhi.app
   ↓
 Return success with digest metadata
 ```
@@ -75,7 +75,7 @@ Central registry for all intent handlers.
 from wos.intent_handlers import get_handler
 
 handler = get_handler(
-    intent_id="daily_email_digest_v0",
+    intent_id="daily_newsletter_digest_v0",
     n8n_executor=executor,
     approval_gate=gate,
     canon_tools=canon
@@ -98,7 +98,7 @@ Updated Brain Control Plane that calls handlers.
 ## Architecture
 
 ```
-Claude (you) asks WOS for "daily_email_digest"
+Claude (you) asks WOS for "daily_newsletter_digest"
   ↓ (MCP call)
 Brain.process_request()
   ├→ Normalize + validate request
@@ -167,7 +167,7 @@ Claude receives digest metadata
    ```python
    request = {
        "request_id": "test-001",
-       "intent": "daily_email_digest"
+       "intent": "daily_newsletter_digest"
    }
    
    response = brain.process_request(request)
@@ -194,8 +194,8 @@ Before using Phase 3.3 in production:
 - [ ] Copy __init__.py to src/wos/intent_handlers/
 - [ ] Update brain.py with new handler integration
 - [ ] Update server.py to pass handler_factory to Brain
-- [ ] Register daily_email_digest_v0 intent in intent_registry
-- [ ] Test: POST request to Brain with intent="daily_email_digest"
+- [ ] Register daily_newsletter_digest_v0 intent in intent_registry
+- [ ] Test: POST request to Brain with intent="daily_newsletter_digest"
 - [ ] Verify n8n workflow executes and sends digest
 - [ ] Check audit log in SQLite for execution record
 
@@ -236,7 +236,7 @@ Before using Phase 3.3 in production:
   "status": "Completed",
   "request_id": "...",
   "execution_id": "...",
-  "resolved_intent": "daily_email_digest",
+  "resolved_intent": "daily_newsletter_digest",
   "result": {
     "digest_generated": true,
     "email_sent_to": "tom@whyhi.app",

@@ -10,7 +10,7 @@ owner: WhyHi Ops Stack (WOS)
 depends_on: WOS-P3.1 Runtime v0 (Brief → Approve → Publish)
 supersedes: N/A
 implemented_in: n8n (self-hosted) workflows + curl client
-interfaces: POST /webhook/wos/brain/v0 ; POST /webhook/wos/intent/daily_email_digest_v0
+interfaces: POST /webhook/wos/brain/v0 ; POST /webhook/wos/intent/daily_newsletter_digest_v0
 
 security_class: internal
 approval_required: HITL for WB deploy (policy pause)
@@ -21,7 +21,7 @@ rollback: Disable workflows in n8n OR re-import prior workflow exports; revert d
 
 ## What’s in this pack
 - `WORKFLOWS/wos_brain_controlplane_v0.json` — Brain control plane workflow (router + normalization + WB guard).
-- `WORKFLOWS/wos_intent_daily_email_digest_v0.json` — Intent workflow for `daily_email_digest_v0`.
+- `WORKFLOWS/wos_intent_daily_newsletter_digest_v0.json` — Intent workflow for `daily_newsletter_digest_v0`.
 - `SCHEMAS.json` — Request/response contracts (Brain + intent).
 - `SPEC.md` — Behavioral spec for Brain v0.
 - `DECISIONS.md` — Key decisions + deferred scope.
@@ -35,7 +35,7 @@ rollback: Disable workflows in n8n OR re-import prior workflow exports; revert d
   - `POST https://n8n.whyhi.app/webhook/wos/brain/v0`
   - JSON body must include: `request_id`, `intent`, optional `input`, optional WB fields.
 - For direct intent testing (optional):
-  - `POST https://n8n.whyhi.app/webhook/wos/intent/daily_email_digest_v0`
+  - `POST https://n8n.whyhi.app/webhook/wos/intent/daily_newsletter_digest_v0`
 
 ## Environment / compatibility
 - n8n: 2.1.3 self-hosted (Docker)

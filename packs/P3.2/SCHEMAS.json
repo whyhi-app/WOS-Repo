@@ -98,9 +98,9 @@
       }
     },
     {
-      "name": "intent_daily_email_digest_v0",
+      "name": "intent_daily_newsletter_digest_v0",
       "method": "POST",
-      "path": "/webhook/wos/intent/daily_email_digest_v0",
+      "path": "/webhook/wos/intent/daily_newsletter_digest_v0",
       "request": {
         "type": "object",
         "required": [

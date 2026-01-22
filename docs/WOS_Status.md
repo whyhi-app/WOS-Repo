@@ -240,7 +240,8 @@
 - **Webhook Path:** `/wos/intent/daily_newsletter_digest_v0`
 - **Status:** Fully operational
   - OAuth token refreshed for wynntom@gmail account (Jan 20, 2026)
-  - Date filter added to both Gmail nodes (last 24 hours only)
+  - Date filter fixed for wynntom Gmail node (was malformed ISO string, now using proper expression - Jan 22, 2026)
+  - Both Gmail nodes now correctly filter for last 24 hours
   - Sends categorized digest (Product, Growth, Operations, Finance) to tom@whyhi.app
 
 ### 2. Gmail to Notion Task ✅ (Autonomous)
@@ -432,10 +433,10 @@ Agent → Approval Gate → Notion Page (Pending) → Human Review → Approved/
 
 **Repository:** /Users/tomwynn/Documents/WhyHi_Server/WOS-Repo
 **Latest Commits:**
-- `dffa29a` - Add Creator Capture iOS Shortcut to backlog
-- `52b7e33` - Fix Creator Capture workflow - URL-based extraction (no page fetch)
-- `937701e` - WIP: Creator Capture deployment (n8n working, iOS shortcut pending)
-- `2c33c91` - Update Daily Newsletter Digest status - fully operational
-- `ec07aa9` - Rename daily_email_digest to daily_newsletter_digest
+- Fix newsletter digest workflow and standardize nomenclature (Jan 22, 2026)
+- `746e8a4` - Complete COS Phase 1: Foundation
+- `9130ac4` - Add COS Notion database setup
+- `6f4eb38` - Add Founder Voice Profile placeholder to Canon
+- `1ad63ea` - Add COS Content Playbook to Canon
 
 See full documentation in WOS_Context.md and this file.

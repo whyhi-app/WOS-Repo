@@ -42,7 +42,7 @@ version: 1.0
 updated_at: 2026-01-11
 source: Same as above
 tags: schemas, json, contract
-summary: JSON contracts for Brain v0 and daily email digest intent endpoint.
+summary: JSON contracts for Brain v0 and daily newsletter digest intent endpoint.
 
 artifact_id: WOS-P3.2-WF-BRAIN-v0
 title: n8n Workflow Export — WOS Brain Control Plane v0
@@ -55,8 +55,8 @@ source: n8n workflow export
 tags: workflow, n8n, brain
 summary: Exported Brain v0 workflow implementing request normalization, routing, and REQ-WB-001 guard.
 
-artifact_id: WOS-P3.2-WF-INTENT-DAILYEMAILDIGEST-v0
-title: n8n Workflow Export — Intent daily_email_digest_v0
+artifact_id: WOS-P3.2-WF-INTENT-DAILYNEWSLETTERDIGEST-v0
+title: n8n Workflow Export — Intent daily_newsletter_digest_v0
 domain: WOS/Core Runtime
 type: Artifact
 status: Approved

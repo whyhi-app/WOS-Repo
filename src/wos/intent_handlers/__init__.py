@@ -35,7 +35,7 @@ def get_handler(intent_id: str, n8n_executor, approval_gate=None, canon_tools=No
     Factory function to get a handler by intent_id
 
     Args:
-        intent_id: Intent ID (e.g., "daily_email_digest_v0")
+        intent_id: Intent ID (e.g., "daily_newsletter_digest_v0")
         n8n_executor: N8nExecutor instance
         approval_gate: ApprovalGate instance (optional)
         canon_tools: CanonTools instance (optional)

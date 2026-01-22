@@ -25,7 +25,8 @@
         "filters": {
           "labelIds": [
             "Label_3870833911670783135"
-          ]
+          ],
+          "receivedAfter": "={{ new Date(Date.now() - 24*60*60*1000).toISOString() }}"
         }
       },
       "type": "n8n-nodes-base.gmail",
@@ -323,7 +324,7 @@
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "/wos/intent/daily_email_digest_v0",
+        "path": "/wos/intent/daily_newsletter_digest_v0",
         "responseMode": "responseNode",
         "options": {
           "rawBody": false

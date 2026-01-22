@@ -23,13 +23,13 @@ rollback: Deactivate workflows; re-import prior exports.
 
 ### Test A — Known intent routes + responds
 ```bash
-curl -sS -X POST "https://n8n.whyhi.app/webhook/wos/brain/v0"   -H "Content-Type: application/json"   -d '{"request_id":"brain-known-final-1","intent":"daily_email_digest_v0","input":{}}'
+curl -sS -X POST "https://n8n.whyhi.app/webhook/wos/brain/v0"   -H "Content-Type: application/json"   -d '{"request_id":"brain-known-final-1","intent":"daily_newsletter_digest_v0","input":{}}'
 ```
 Expected keys:
 - `ok: true`
 - `status: "Completed"`
 - `request_id` equals input
-- `resolved_intent: "daily_email_digest_v0"`
+- `resolved_intent: "daily_newsletter_digest_v0"`
 - `result.statusCode: 200`
 - `result.body.message: "Workflow was started"`
 
@@ -45,7 +45,7 @@ Expected keys:
 
 ### Test C — REQ-WB-001 guard pauses deploy
 ```bash
-curl -sS -X POST "https://n8n.whyhi.app/webhook/wos/brain/v0"   -H "Content-Type: application/json"   -d '{"request_id":"brain-wb-proof-guard-1","intent":"daily_email_digest_v0","mode":"workflow_builder","wb_stage":"deploy","input":{}}'
+curl -sS -X POST "https://n8n.whyhi.app/webhook/wos/brain/v0"   -H "Content-Type: application/json"   -d '{"request_id":"brain-wb-proof-guard-1","intent":"daily_newsletter_digest_v0","mode":"workflow_builder","wb_stage":"deploy","input":{}}'
 ```
 Expected keys:
 - `ok: false`

@@ -21,7 +21,7 @@
 
 **Key Classes:**
 - `IntentRegistry` — Main registry interface
-- `INITIAL_INTENTS` — V0 intent definitions (brief_generator, daily_email_digest)
+- `INITIAL_INTENTS` — V0 intent definitions (brief_generator, daily_newsletter_digest)
 
 **Usage:**
 ```python
@@ -107,7 +107,7 @@ executor = N8nExecutor(
 )
 
 result = executor.execute_workflow(
-    workflow_name="daily_email_digest",
+    workflow_name="daily_newsletter_digest",
     payload={"user_id": 123},
     timeout_seconds=30
 )
