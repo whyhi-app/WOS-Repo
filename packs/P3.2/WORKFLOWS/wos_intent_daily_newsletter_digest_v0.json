@@ -21,34 +21,7 @@
     {
       "parameters": {
         "operation": "getAll",
-        "limit": 25,
-        "filters": {
-          "labelIds": [
-            "Label_3870833911670783135"
-          ],
-          "receivedAfter": "={{ new Date(Date.now() - 24*60*60*1000).toISOString() }}"
-        }
-      },
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2.2,
-      "position": [
-        256,
-        -176
-      ],
-      "id": "264bae23-0876-4b3e-98ec-6f5dbc0920af",
-      "name": "Get many messages wynntom",
-      "webhookId": "369c05b0-00f8-454d-a82f-690eb32be85d",
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "1A3zdE2YZoIaHdRu",
-          "name": "Gmail wynntom@gmail"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "getAll",
-        "limit": 20,
+        "limit": 50,
         "filters": {
           "labelIds": [
             "Label_323411605141459935"
@@ -73,43 +46,6 @@
       }
     },
     {
-      "parameters": {},
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        720,
-        -16
-      ],
-      "id": "49829afb-96fd-442e-93fe-d3513b91111e",
-      "name": "Merge"
-    },
-    {
-      "parameters": {
-        "jsCode": "return items.map(item => {\n  item.json.source_account = \"wynntom_gmail\";\n  if (item.json.id) item.json.message_id = item.json.id;\n  return item;\n});"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        464,
-        -176
-      ],
-      "id": "a03f30a9-f955-4737-af4c-ca4de76df90d",
-      "name": "Stamp wynntom_gmail"
-    },
-    {
-      "parameters": {
-        "jsCode": "return items.map(item => {\n  item.json.source_account = \"tom_whyhi\";\n  if (item.json.id) item.json.message_id = item.json.id;\n  return item;\n});"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        464,
-        0
-      ],
-      "id": "ed7446f7-7a44-4086-aaff-056f2e42d9ef",
-      "name": "Stamp tom_whyhi"
-    },
-    {
       "parameters": {
         "jsCode": "const seen = new Set();\nconst out = [];\n\nfor (const item of items) {\n  const id = item.json.message_id ?? item.json.id;\n  if (!id) continue;\n\n  if (seen.has(id)) continue;\n  seen.add(id);\n\n  // Normalize so downstream nodes always use message_id\n  item.json.message_id = id;\n  out.push(item);\n}\n\nreturn out;"
       },
@@ -121,61 +57,6 @@
       ],
       "id": "a92a8808-fff9-4e25-8f0d-5984c0bf286c",
       "name": "Deduplicate"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "c6007b28-ff45-460a-a8aa-65ee5e6aa716",
-              "leftValue": "={{$json.source_account}}",
-              "rightValue": "wynntom_gmail",
-              "operator": {
-                "type": "string",
-                "operation": "equals",
-                "name": "filter.operator.equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        80,
-        240
-      ],
-      "id": "00990a7d-45f1-407d-9e70-d58d5f8c7716",
-      "name": "Route by source_account"
-    },
-    {
-      "parameters": {
-        "operation": "get",
-        "messageId": "={{$json.message_id}}"
-      },
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2.2,
-      "position": [
-        256,
-        224
-      ],
-      "id": "3fa5c1b1-5a51-425e-8785-63969912b8b2",
-      "name": "Get a message wynntom_gmail",
-      "webhookId": "671a9c77-7469-4588-8078-2497c792459a",
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "1A3zdE2YZoIaHdRu",
-          "name": "Gmail wynntom@gmail"
-        }
-      }
     },
     {
       "parameters": {
@@ -197,17 +78,6 @@
           "name": "Gmail tom@whyhi.app"
         }
       }
-    },
-    {
-      "parameters": {},
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        448,
-        240
-      ],
-      "id": "e30c44ec-8c49-46ee-86b3-953b98b1b790",
-      "name": "Merge1"
     },
     {
       "parameters": {
@@ -247,10 +117,10 @@
           "values": [
             {
               "role": "system",
-              "content": "You are WhyHi’s full-time email relevance analyst for a solo founder. Your job is to extract the highest-signal, most actionable information from a batch of emails and produce a daily digest.\n\nWhyHi context:\n- WhyHi is a modern calling platform that makes phone calls intentional by adding context before pickup: call intention + call duration.\n- WhyHi is building toward a platform layer for live calling with lightweight relationship/CRM mechanics and future AI-powered features (summaries, insights, reminders, automation).\n\nGuiding principles:\n- Be concise, practical, and actionable.\n- Avoid generic fluff; prefer concrete takeaways, tools, tactics, product patterns, numbers, and named entities.\n- Do not invent facts. Use only what’s in the provided email batch JSON.\n- If subject/from are missing, infer a short title from snippet/content.\n- Use your best judgment to categorize items. If something could fit multiple categories, pick the best fit; misclassification is not critical.\n\nCategories (use these buckets):\n- Product: comms/calling UX, feature ideas, platform/call flows, trust/safety patterns, competitor product moves in comms\n- Growth: marketing, positioning, distribution, onboarding, retention, PR, partnerships, community, GTM tactics, upcoming events in Los Angeles for tech startup founders, entrepreneurs\n- Operations: founder productivity, AI tools, agent workflows, n8n/MCP patterns, process, reliability, execution systems\n- Finance: funding rounds, VC/angel insights, pricing/monetization, financial modeling, unit economics, infra cost signals"
+              "content": "You are WhyHi\u2019s full-time email relevance analyst for a solo founder. Your job is to extract the highest-signal, most actionable information from a batch of emails and produce a daily digest.\n\nWhyHi context:\n- WhyHi is a modern calling platform that makes phone calls intentional by adding context before pickup: call intention + call duration.\n- WhyHi is building toward a platform layer for live calling with lightweight relationship/CRM mechanics and future AI-powered features (summaries, insights, reminders, automation).\n\nGuiding principles:\n- Be concise, practical, and actionable.\n- Avoid generic fluff; prefer concrete takeaways, tools, tactics, product patterns, numbers, and named entities.\n- Do not invent facts. Use only what\u2019s in the provided email batch JSON.\n- If subject/from are missing, infer a short title from snippet/content.\n- Use your best judgment to categorize items. If something could fit multiple categories, pick the best fit; misclassification is not critical.\n\nCategories (use these buckets):\n- Product: comms/calling UX, feature ideas, platform/call flows, trust/safety patterns, competitor product moves in comms\n- Growth: marketing, positioning, distribution, onboarding, retention, PR, partnerships, community, GTM tactics, upcoming events in Los Angeles for tech startup founders, entrepreneurs\n- Operations: founder productivity, AI tools, agent workflows, n8n/MCP patterns, process, reliability, execution systems\n- Finance: funding rounds, VC/angel insights, pricing/monetization, financial modeling, unit economics, infra cost signals"
             },
             {
-              "content": "=Analyze this batch of emails (JSON) and return a daily digest for WhyHi.\n\nReturn VALID HTML ONLY (no markdown, no code blocks). Use <h2>, <ul>, <li>, <ol>, <b>, and <a>.\nEvery <li> MUST include: style=\"margin: 0 0 12px 0;\"\n\nWhat to include:\n- Include only items you judge relevant/useful for WhyHi (high-signal). If something isn’t useful, omit it.\n- For each included item, add a relevance score 0–10 and exactly one next action.\n- End each item with clickable links:\n  1) Open email (gmail_link)\n  2) Up to 3 source URLs from urls[] (if present)\n- If urls[] is empty, show only “Open email”.\n- Never write “unclear link” / “no direct link”.\n\nOutput structure (follow exactly):\n\n<h2>🔧 Product</h2>\n<ul>\n  <!-- items OR the single \"No relevant items today.\" line -->\n</ul>\n\n<h2>📈 Growth</h2>\n<ul>\n  <!-- items OR the single \"No relevant items today.\" line -->\n</ul>\n\n<h2>🧠 Operations</h2>\n<ul>\n  <!-- items OR the single \"No relevant items today.\" line -->\n</ul>\n\n<h2>💰 Finance</h2>\n<ul>\n  <!-- items OR the single \"No relevant items today.\" line -->\n</ul>\n\n<h2>Top 7 Next Actions</h2>\n<ol>\n  <!-- up to 7 actions -->\n</ol>\n\nBullet format (use exactly this pattern inside each <li>):\n<li style=\"margin: 0 0 12px 0;\">\n  <b>[Score]</b> Title — why it matters — next action —\n  <a href=\"GMAIL_LINK\">Open email</a> | <a href=\"URL1\">Source 1</a> | <a href=\"URL2\">Source 2</a> | <a href=\"URL3\">Source 3</a>\n</li>\n\nRules:\n- If a section has no included items, write exactly: <li style=\"margin: 0 0 12px 0;\">No relevant items today.</li>\n- Keep each bullet to 1–2 lines max (don’t ramble).\n- The “Top 7 Next Actions” list should be short, specific, and derived from the items above.\n\nNow here is the batch JSON:\n{{ JSON.stringify($json.packets) }}"
+              "content": "=Analyze this batch of emails (JSON) and return a daily digest for WhyHi.\n\nReturn VALID HTML ONLY (no markdown, no code blocks). Use <h2>, <ul>, <li>, <ol>, <b>, and <a>.\nEvery <li> MUST include: style=\"margin: 0 0 12px 0;\"\n\nWhat to include:\n- Include only items you judge relevant/useful for WhyHi (high-signal). If something isn\u2019t useful, omit it.\n- For each included item, add a relevance score 0\u201310 and exactly one next action.\n- End each item with clickable links:\n  1) Open email (gmail_link)\n  2) Up to 3 source URLs from urls[] (if present)\n- If urls[] is empty, show only \u201cOpen email\u201d.\n- Never write \u201cunclear link\u201d / \u201cno direct link\u201d.\n\nOutput structure (follow exactly):\n\n<h2>\ud83d\udd27 Product</h2>\n<ul>\n  <!-- items OR the single \"No relevant items today.\" line -->\n</ul>\n\n<h2>\ud83d\udcc8 Growth</h2>\n<ul>\n  <!-- items OR the single \"No relevant items today.\" line -->\n</ul>\n\n<h2>\ud83e\udde0 Operations</h2>\n<ul>\n  <!-- items OR the single \"No relevant items today.\" line -->\n</ul>\n\n<h2>\ud83d\udcb0 Finance</h2>\n<ul>\n  <!-- items OR the single \"No relevant items today.\" line -->\n</ul>\n\n<h2>Top 7 Next Actions</h2>\n<ol>\n  <!-- up to 7 actions -->\n</ol>\n\nBullet format (use exactly this pattern inside each <li>):\n<li style=\"margin: 0 0 12px 0;\">\n  <b>[Score]</b> Title \u2014 why it matters \u2014 next action \u2014\n  <a href=\"GMAIL_LINK\">Open email</a> | <a href=\"URL1\">Source 1</a> | <a href=\"URL2\">Source 2</a> | <a href=\"URL3\">Source 3</a>\n</li>\n\nRules:\n- If a section has no included items, write exactly: <li style=\"margin: 0 0 12px 0;\">No relevant items today.</li>\n- Keep each bullet to 1\u20132 lines max (don\u2019t ramble).\n- The \u201cTop 7 Next Actions\u201d list should be short, specific, and derived from the items above.\n\nNow here is the batch JSON:\n{{ JSON.stringify($json.packets) }}"
             }
           ]
         },
@@ -296,17 +166,6 @@
       }
     },
     {
-      "parameters": {},
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        64,
-        -80
-      ],
-      "id": "aeb5f33e-0934-4825-89be-3b486b22efeb",
-      "name": "Merge Triggers"
-    },
-    {
       "parameters": {
         "respondWith": "json",
         "responseBody": "{\"ok\":false,\"status\":\"Failed\",\"error\":\"UNAUTHORIZED\"}",
@@ -320,55 +179,6 @@
       ],
       "id": "c7181171-75ec-46b2-8b6c-ed9615cb151b",
       "name": "Respond to Webhook"
-    },
-    {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "/wos/intent/daily_newsletter_digest_v0",
-        "responseMode": "responseNode",
-        "options": {
-          "rawBody": false
-        }
-      },
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2.1,
-      "position": [
-        -432,
-        -288
-      ],
-      "id": "ab55a2b3-4332-4af1-bb7d-0db75a976325",
-      "name": "Intent Webhook",
-      "webhookId": "a1945da6-8038-4a31-828b-5c8096690711"
-    },
-    {
-      "parameters": {
-        "mode": "raw",
-        "jsonOutput": "{ \"message\": \"Workflow was started\" }",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -256,
-        -400
-      ],
-      "id": "74c2ff26-d104-41d9-aad9-e7952991cf17",
-      "name": "Ack"
-    },
-    {
-      "parameters": {
-        "options": {
-          "responseCode": 200
-        }
-      },
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.5,
-      "position": [
-        -80,
-        -400
-      ],
-      "id": "412c9af9-d245-4414-9299-58ac0878f94c",
-      "name": "Respond to Webhook1"
     }
   ],
   "pinData": {},
@@ -377,18 +187,7 @@
       "main": [
         [
           {
-            "node": "Merge Triggers",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
-    "Get many messages wynntom": {
-      "main": [
-        [
-          {
-            "node": "Stamp wynntom_gmail",
+            "node": "Get many messages tom@whyhi",
             "type": "main",
             "index": 0
           }
@@ -396,39 +195,6 @@
       ]
     },
     "Get many messages tom@whyhi": {
-      "main": [
-        [
-          {
-            "node": "Stamp tom_whyhi",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Stamp wynntom_gmail": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Stamp tom_whyhi": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
-    "Merge": {
       "main": [
         [
           {
@@ -443,24 +209,6 @@
       "main": [
         [
           {
-            "node": "Route by source_account",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Route by source_account": {
-      "main": [
-        [
-          {
-            "node": "Get a message wynntom_gmail",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
             "node": "Get a message",
             "type": "main",
             "index": 0
@@ -468,29 +216,7 @@
         ]
       ]
     },
-    "Get a message wynntom_gmail": {
-      "main": [
-        [
-          {
-            "node": "Merge1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Get a message": {
-      "main": [
-        [
-          {
-            "node": "Merge1",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
-    "Merge1": {
       "main": [
         [
           {
@@ -532,54 +258,6 @@
             "index": 0
           }
         ]
-      ]
-    },
-    "Merge Triggers": {
-      "main": [
-        [
-          {
-            "node": "Get many messages wynntom",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Get many messages tom@whyhi",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Intent Webhook": {
-      "main": [
-        [
-          {
-            "node": "Ack",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Merge Triggers",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Ack": {
-      "main": [
-        [
-          {
-            "node": "Respond to Webhook1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Respond to Webhook1": {
-      "main": [
-        []
       ]
     }
   },
