@@ -1,0 +1,8 @@
+COS Database IDs
+============================================================
+
+COS Parent Page: 2f0632f5-307e-81a6-9ab8-e9e2474eb030
+Content & Creator Capture: 23d632f5-307e-8001-a1d6-fb31be92d59e
+Content Ideas Queue: dae2c9d9-83ce-46b4-be71-f057c0dc5230
+Drafts for Review: c38b205a-31d2-4499-9cba-bb3b59af5a4e
+Content Calendar: ceaf6b8a-1d36-4b60-92c0-87155c3a47b7
