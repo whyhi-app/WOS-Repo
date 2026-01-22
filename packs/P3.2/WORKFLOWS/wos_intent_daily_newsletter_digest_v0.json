@@ -26,7 +26,7 @@
           "labelIds": [
             "Label_323411605141459935"
           ],
-          "receivedAfter": "={{ new Date(Date.now() - 7*24*60*60*1000).toISOString() }}"
+          "receivedAfter": "={{ new Date(Date.now() - 3*24*60*60*1000).toISOString() }}"
         }
       },
       "type": "n8n-nodes-base.gmail",
