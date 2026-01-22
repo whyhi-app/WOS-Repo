@@ -234,14 +234,14 @@
 
 ### 1. Daily Newsletter Digest ✅ (WOS-Managed)
 - **Execute:** `~/.local/bin/claude "execute the daily_newsletter_digest intent"`
-- **Function:** Fetches, categorizes, digests newsletters from Gmail (wynntom@gmail + tom@whyhi.app)
+- **Function:** Fetches, categorizes, digests newsletters from Gmail tom@whyhi.app Queue label (emails from both accounts copied via Apple Mail)
 - **n8n Workflow:** Daily_Newsletter_Digest
 - **Execution Mode:** `wos_managed` (Brain triggers) + Scheduled (daily at midnight)
 - **Webhook Path:** `/wos/intent/daily_newsletter_digest_v0`
 - **Status:** Fully operational
-  - OAuth token refreshed for wynntom@gmail account (Jan 20, 2026)
-  - Date filter fixed for wynntom Gmail node (was malformed ISO string, now using proper expression - Jan 22, 2026)
-  - Both Gmail nodes now correctly filter for last 24 hours
+  - Simplified to single Gmail source (tom@whyhi.app) after confirming Apple Mail copies emails from both accounts (Jan 22, 2026)
+  - Removed dual Gmail nodes, routing logic, and account-specific stamping for cleaner flow
+  - Filters for last 24 hours with proper date expression
   - Sends categorized digest (Product, Growth, Operations, Finance) to tom@whyhi.app
 
 ### 2. Gmail to Notion Task ✅ (Autonomous)
