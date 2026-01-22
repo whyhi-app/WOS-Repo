@@ -18,9 +18,9 @@
 ✅ **Artifact Publisher:** ✅ Complete (Sprint 1)
 ✅ **Approval Gate:** ✅ Complete (Sprint 1 - tested with Notion)
 ✅ **Notion CRM:** ✅ Connected (with Outreach Status tracking)
-✅ **Working Agents:** 5 (2 WOS-managed + 3 autonomous)
-  - Daily Newsletter Digest (WOS)
+✅ **Working Agents:** 5 (1 WOS-managed + 4 autonomous)
   - Creator Outreach (WOS)
+  - Daily Newsletter Digest (Autonomous)
   - Gmail to Notion Task (Autonomous)
   - Apple Reminders Sync (Autonomous)
   - Creator Capture (Autonomous - functional, needs iOS setup)
@@ -232,15 +232,15 @@
 
 ## **OPERATIONAL AGENTS**
 
-### 1. Daily Newsletter Digest ✅ (WOS-Managed)
-- **Execute:** `~/.local/bin/claude "execute the daily_newsletter_digest intent"`
+### 1. Daily Newsletter Digest ✅ (Autonomous)
+- **Trigger:** Schedule (daily at midnight)
 - **Function:** Fetches, categorizes, digests newsletters from Gmail tom@whyhi.app Queue label (emails from both accounts copied via Apple Mail)
 - **n8n Workflow:** Daily_Newsletter_Digest
-- **Execution Mode:** `wos_managed` (Brain triggers) + Scheduled (daily at midnight)
-- **Webhook Path:** `/wos/intent/daily_newsletter_digest_v0`
+- **Execution Mode:** `autonomous_scheduled` (n8n timer, no webhook/Brain trigger)
 - **Status:** Fully operational
   - Simplified to single Gmail source (tom@whyhi.app) after confirming Apple Mail copies emails from both accounts (Jan 22, 2026)
   - Removed dual Gmail nodes, routing logic, and account-specific stamping for cleaner flow
+  - Removed Intent Webhook and WOS Brain integration - pure scheduled automation (Jan 22, 2026)
   - Filters for last 24 hours with proper date expression
   - Sends categorized digest (Product, Growth, Operations, Finance) to tom@whyhi.app
 

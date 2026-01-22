@@ -9,16 +9,10 @@ from typing import Dict, Any, Optional
 logger = logging.getLogger("wos.intent_handlers")
 
 # Import handlers as they're added
-from wos.intent_handlers.daily_newsletter_digest import create_daily_newsletter_digest_handler
 from wos.intent_handlers.creator_outreach import create_handler as create_creator_outreach_handler
 
 # Handler registry - maps intent_id to handler factory
 HANDLER_REGISTRY = {
-    "daily_newsletter_digest_v0": {
-        "factory": create_daily_newsletter_digest_handler,
-        "name": "Daily Newsletter Digest",
-        "version": "0.1",
-    },
     "creator_outreach_v0": {
         "factory": create_creator_outreach_handler,
         "name": "Creator Outreach",
@@ -27,6 +21,7 @@ HANDLER_REGISTRY = {
     # Future handlers will be added here:
     # "brief_generator_v0": {...},
     # etc.
+    # Note: daily_newsletter_digest is now autonomous (schedule-only, no webhook)
 }
 
 
