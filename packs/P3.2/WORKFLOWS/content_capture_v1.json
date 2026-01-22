@@ -17,7 +17,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extract creator information directly from URL (no page fetch needed)\nconst url = $input.item.json.body.url;\nconst userNotes = $input.item.json.body.notes || '';\n\n// Initialize creator data\nlet creator = {\n  url: url,\n  name: '',\n  email: '',\n  company: '',\n  platform: '',\n  contact_method: 'DM',\n  notes: `Captured from: ${url}`,\n  user_notes: userNotes\n};\n\n// Detect platform and extract info from URL\nif (url.includes('twitter.com') || url.includes('x.com')) {\n  creator.platform = 'Twitter/X';\n  creator.contact_method = 'Twitter DM';\n  const handleMatch = url.match(/(?:twitter\\.com|x\\.com)\\/([^\\/\\?]+)/);\n  if (handleMatch) {\n    creator.name = '@' + handleMatch[1];\n  }\n  \n} else if (url.includes('instagram.com')) {\n  creator.platform = 'Instagram';\n  creator.contact_method = 'Instagram DM';\n  \n  // Extract handle from URL\n  let handleMatch = url.match(/instagram\\.com\\/([a-zA-Z0-9._]+)(?:\\/|\\?|$)/);\n  if (handleMatch && handleMatch[1] !== 'p' && handleMatch[1] !== 'reel' && handleMatch[1] !== 'stories') {\n    creator.name = '@' + handleMatch[1];\n  } else if (url.includes('/p/') || url.includes('/reel/')) {\n    creator.platform = 'Instagram (Post)';\n    const postIdMatch = url.match(/\\/(?:p|reel)\\/([^\\/\\?]+)/);\n    creator.name = `IG Post - ${postIdMatch ? postIdMatch[1].substring(0, 15) : 'Unknown'}`;\n    creator.notes = `⚠️ POST URL CAPTURED\\n\\nTo get the creator handle:\\n1. Open this post in Instagram\\n2. Tap on the username at the top\\n3. Share the PROFILE URL (not post)\\n\\n` + creator.notes;\n  }\n  \n} else if (url.includes('youtube.com') || url.includes('youtu.be')) {\n  creator.platform = 'YouTube';\n  creator.contact_method = 'YouTube Comment/Email';\n  \n  // Extract channel handle from URL if present\n  const handleMatch = url.match(/youtube\\.com\\/@([^\\/\\?]+)/);\n  if (handleMatch) {\n    creator.name = '@' + handleMatch[1];\n  } else if (url.includes('/watch?v=') || url.includes('youtu.be/')) {\n    // It's a video URL - needs manual follow-up\n    creator.platform = 'YouTube (Video)';\n    const videoIdMatch = url.match(/(?:[?&]v=|youtu\\.be\\/)([^&?]+)/);\n    if (videoIdMatch) {\n      creator.name = `YT Video - ${videoIdMatch[1]}`;\n      creator.notes = `⚠️ VIDEO URL CAPTURED\\n\\nTo get the creator info, please:\\n1. Open this video in YouTube\\n2. Click on the channel name\\n3. Share the CHANNEL URL (not video)\\n\\nVideo ID: ${videoIdMatch[1]}\\n` + creator.notes;\n    }\n  } else if (url.includes('/channel/')) {\n    // Channel ID URL\n    const channelIdMatch = url.match(/\\/channel\\/([^\\/\\?]+)/);\n    if (channelIdMatch) {\n      creator.name = `YT Channel - ${channelIdMatch[1].substring(0, 20)}`;\n      creator.notes = `Channel ID: ${channelIdMatch[1]}\\n` + creator.notes;\n    }\n  } else {\n    // Some other YouTube URL\n    creator.name = 'YouTube Link';\n  }\n  \n} else if (url.includes('tiktok.com')) {\n  creator.platform = 'TikTok';\n  creator.contact_method = 'TikTok DM';\n  const handleMatch = url.match(/tiktok\\.com\\/@([^\\/\\?]+)/);\n  if (handleMatch) {\n    creator.name = '@' + handleMatch[1];\n  }\n  \n} else if (url.includes('linkedin.com')) {\n  creator.platform = 'LinkedIn';\n  creator.contact_method = 'LinkedIn Message';\n  \n  // Extract name or company from URL\n  if (url.includes('/in/')) {\n    const nameMatch = url.match(/\\/in\\/([^\\/\\?]+)/);\n    if (nameMatch) {\n      creator.name = nameMatch[1].replace(/-/g, ' ').replace(/\\b\\w/g, l => l.toUpperCase());\n    }\n  } else if (url.includes('/company/')) {\n    creator.platform = 'LinkedIn (Company)';\n    creator.contact_method = 'LinkedIn Page Message';\n    const companyMatch = url.match(/\\/company\\/([^\\/\\?]+)/);\n    if (companyMatch) {\n      creator.name = companyMatch[1].replace(/-/g, ' ').replace(/\\b\\w/g, l => l.toUpperCase());\n      creator.company = creator.name;\n    }\n  }\n  \n} else if (url.includes('facebook.com') || url.includes('fb.com')) {\n  creator.platform = 'Facebook';\n  creator.contact_method = 'Facebook Messenger';\n  \n  // Extract page/profile name from URL\n  let nameMatch = url.match(/facebook\\.com\\/([^\\/\\?]+)/);\n  if (nameMatch && nameMatch[1] !== 'profile.php' && nameMatch[1] !== 'www') {\n    creator.name = nameMatch[1].replace(/\\./g, ' ');\n  }\n  \n  if (url.includes('/pages/')) {\n    creator.platform = 'Facebook (Page)';\n  }\n  \n} else {\n  // Article/blog/other\n  creator.platform = 'Article/Blog';\n  creator.contact_method = 'Email';\n  \n  // Use domain as name\n  try {\n    const domain = new URL(url).hostname.replace('www.', '');\n    creator.name = domain;\n  } catch (e) {\n    creator.name = 'Unknown';\n  }\n}\n\n// If no name extracted, use domain\nif (!creator.name) {\n  try {\n    const domain = new URL(url).hostname.replace('www.', '');\n    creator.name = domain;\n    if (creator.platform === 'Article/Blog') {\n      creator.notes = `⚠️ Article/Link captured\\n\\nReview this entry and add:\\n- Author name\\n- Email (if found)\\n- Publication name\\n\\n` + creator.notes;\n    }\n  } catch (e) {\n    creator.name = 'Unknown Link';\n    creator.notes = `⚠️ Could not parse URL\\n` + creator.notes;\n  }\n}\n\nreturn { json: creator };"
+        "jsCode": "const url = $input.item.json.body.url;\nconst userNotes = $input.item.json.body.notes || '';\n\nlet creator = {\n  url: url,\n  name: '',\n  email: '',\n  company: '',\n  platform: '',\n  contact_method: 'DM',\n  notes: `Captured from: ${url}`,\n  user_notes: userNotes\n};\n\nif (url.includes('twitter.com') || url.includes('x.com')) {\n  creator.platform = 'Twitter/X';\n  creator.contact_method = 'Twitter DM';\n  const handleMatch = url.match(/(?:twitter\\.com|x\\.com)\\/([^\\/\\?]+)/);\n  if (handleMatch) {\n    creator.name = '@' + handleMatch[1];\n  }\n} else if (url.includes('instagram.com')) {\n  creator.platform = 'Instagram';\n  creator.contact_method = 'Instagram DM';\n  let handleMatch = url.match(/instagram\\.com\\/([a-zA-Z0-9._]+)(?:\\/|\\?|$)/);\n  if (handleMatch && handleMatch[1] !== 'p' && handleMatch[1] !== 'reel' && handleMatch[1] !== 'stories') {\n    creator.name = '@' + handleMatch[1];\n  } else if (url.includes('/p/') || url.includes('/reel/')) {\n    creator.platform = 'Instagram (Post)';\n    const postIdMatch = url.match(/\\/(?:p|reel)\\/([^\\/\\?]+)/);\n    creator.name = `IG Post - ${postIdMatch ? postIdMatch[1].substring(0, 15) : 'Unknown'}`;\n    creator.notes = `⚠️ POST URL CAPTURED\\n\\nTo get the creator handle:\\n1. Open this post in Instagram\\n2. Tap on the username at the top\\n3. Share the PROFILE URL (not post)\\n\\n` + creator.notes;\n  }\n} else if (url.includes('youtube.com') || url.includes('youtu.be')) {\n  creator.platform = 'YouTube';\n  creator.contact_method = 'YouTube Comment/Email';\n  const handleMatch = url.match(/youtube\\.com\\/@([^\\/\\?]+)/);\n  if (handleMatch) {\n    creator.name = '@' + handleMatch[1];\n  } else if (url.includes('/watch?v=') || url.includes('youtu.be/')) {\n    creator.platform = 'YouTube (Video)';\n    const videoIdMatch = url.match(/(?:[?&]v=|youtu\\.be\\/)([^&?]+)/);\n    if (videoIdMatch) {\n      creator.name = `YT Video - ${videoIdMatch[1]}`;\n      creator.notes = `⚠️ VIDEO URL CAPTURED\\n\\nTo get the creator info, please:\\n1. Open this video in YouTube\\n2. Click on the channel name\\n3. Share the CHANNEL URL (not video)\\n\\nVideo ID: ${videoIdMatch[1]}\\n` + creator.notes;\n    }\n  } else if (url.includes('/channel/')) {\n    const channelIdMatch = url.match(/\\/channel\\/([^\\/\\?]+)/);\n    if (channelIdMatch) {\n      creator.name = `YT Channel - ${channelIdMatch[1].substring(0, 20)}`;\n      creator.notes = `Channel ID: ${channelIdMatch[1]}\\n` + creator.notes;\n    }\n  } else {\n    creator.name = 'YouTube Link';\n  }\n} else if (url.includes('tiktok.com')) {\n  creator.platform = 'TikTok';\n  creator.contact_method = 'TikTok DM';\n  const handleMatch = url.match(/tiktok\\.com\\/@([^\\/\\?]+)/);\n  if (handleMatch) {\n    creator.name = '@' + handleMatch[1];\n  }\n} else if (url.includes('linkedin.com')) {\n  creator.platform = 'LinkedIn';\n  creator.contact_method = 'LinkedIn Message';\n  if (url.includes('/in/')) {\n    const nameMatch = url.match(/\\/in\\/([^\\/\\?]+)/);\n    if (nameMatch) {\n      creator.name = nameMatch[1].replace(/-/g, ' ').replace(/\\b\\w/g, l => l.toUpperCase());\n    }\n  } else if (url.includes('/company/')) {\n    creator.platform = 'LinkedIn (Company)';\n    creator.contact_method = 'LinkedIn Page Message';\n    const companyMatch = url.match(/\\/company\\/([^\\/\\?]+)/);\n    if (companyMatch) {\n      creator.name = companyMatch[1].replace(/-/g, ' ').replace(/\\b\\w/g, l => l.toUpperCase());\n      creator.company = creator.name;\n    }\n  }\n} else if (url.includes('facebook.com') || url.includes('fb.com')) {\n  creator.platform = 'Facebook';\n  creator.contact_method = 'Facebook Messenger';\n  if (url.includes('/share/')) {\n    const videoIdMatch = url.match(/\\/share\\/v\\/([^\\/\\?]+)/);\n    if (videoIdMatch) {\n      creator.name = `FB Video - ${videoIdMatch[1]}`;\n      creator.notes = `⚠️ FACEBOOK SHARE LINK\\n\\nThis is a shared video link. To find the original poster:\\n1. Open this link in Facebook\\n2. Check who posted it\\n3. Update this entry with their name/page\\n\\n` + creator.notes;\n    } else {\n      creator.name = 'Facebook Shared Post';\n      creator.notes = `⚠️ FACEBOOK SHARE LINK\\n\\n` + creator.notes;\n    }\n  } else {\n    let nameMatch = url.match(/facebook\\.com\\/([^\\/\\?]+)/);\n    if (nameMatch && nameMatch[1] !== 'profile.php' && nameMatch[1] !== 'www' && nameMatch[1] !== 'share') {\n      creator.name = nameMatch[1].replace(/\\./g, ' ');\n    }\n  }\n  if (url.includes('/pages/')) {\n    creator.platform = 'Facebook (Page)';\n  }\n} else {\n  creator.platform = 'Article/Blog';\n  creator.contact_method = 'Email';\n  try {\n    const domain = new URL(url).hostname.replace('www.', '');\n    creator.name = domain;\n  } catch (e) {\n    creator.name = 'Unknown';\n  }\n}\n\nif (!creator.name) {\n  try {\n    const domain = new URL(url).hostname.replace('www.', '');\n    creator.name = domain;\n    if (creator.platform === 'Article/Blog') {\n      creator.notes = `⚠️ Article/Link captured\\n\\nReview this entry and add:\\n- Author name\\n- Email (if found)\\n- Publication name\\n\\n` + creator.notes;\n    }\n  } catch (e) {\n    creator.name = 'Unknown Link';\n    creator.notes = `⚠️ Could not parse URL\\n` + creator.notes;\n  }\n}\n\nreturn { json: creator };"
       },
       "id": "extract-creator",
       "name": "Extract Creator Info",
@@ -28,41 +28,46 @@
     {
       "parameters": {
         "resource": "databasePage",
-        "databaseId": "23d632f5307e8001a1d6fb31be92d59e",
-        "title": "={{$json.name}}",
-        "properties": {
-          "customProperty": [
+        "operation": "create",
+        "databaseId": {
+          "__rl": true,
+          "value": "edbf92f3d884478aa27e11d1c6c929ca",
+          "mode": "id"
+        },
+        "title": "={{ $json.name }}",
+        "propertiesUi": {
+          "propertyValues": [
             {
               "key": "URL",
-              "textContent": "={{$json.url}}"
+              "urlValue": "={{ $json.url }}"
             },
             {
-              "key": "Email",
-              "textContent": "={{$json.email}}"
-            },
-            {
-              "key": "Company",
-              "textContent": "={{$json.company}}"
+              "key": "Platform",
+              "selectValue": "={{ $json.platform }}"
             },
             {
               "key": "Contact Method",
-              "textContent": "={{$json.contact_method}}"
-            },
-            {
-              "key": "Notes",
-              "textContent": "={{$json.notes}}"
-            },
-            {
-              "key": "Outreach Status",
-              "selectValue": "New Lead"
+              "textValue": "={{ $json.contact_method }}"
             },
             {
               "key": "Content Notes",
-              "textContent": "={{$json.user_notes}}"
+              "textValue": "={{ $json.user_notes }}"
+            },
+            {
+              "key": "Notes",
+              "textValue": "={{ $json.notes }}"
             },
             {
               "key": "Ideation Status",
               "selectValue": "New"
+            },
+            {
+              "key": "Email",
+              "emailValue": "={{ $json.email }}"
+            },
+            {
+              "key": "Company",
+              "textValue": "={{ $json.company }}"
             }
           ]
         }
@@ -81,8 +86,8 @@
     },
     {
       "parameters": {
-        "respondWith": "json",
-        "responseBody": "={\"ok\": true, \"status\": \"Content added to CRM\", \"name\": \"{{$json.name}}\", \"platform\": \"{{$json.platform}}\", \"contact_method\": \"{{$json.contact_method}}\"}"
+        "respondWith": "text",
+        "responseBody": "Added!"
       },
       "id": "respond-success",
       "name": "Respond to Webhook",

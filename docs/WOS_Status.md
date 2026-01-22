@@ -1,6 +1,6 @@
 # WOS Status Report
 
-**Last Updated:** January 21, 2026 (COS Phase 1 Foundation Complete)
+**Last Updated:** January 22, 2026 (COS Phase 1 Foundation + Workflow Testing)
 **Version:** Phase 3.5 (COS Foundation + Canon + Notion Databases)
 **Status:** 🟢 COS Phase 1 Complete - Ready for Phase 2 (Ideation Flow)
 **Launch Target:** Mid-March 2026
@@ -152,14 +152,18 @@
 **Purpose:** Create database infrastructure for content pipeline (capture → ideas → drafts → calendar)
 
 **Deliverables:**
-- ✅ **Content & Creator Capture** (existing database updated)
-  - Database ID: `23d632f5-307e-8001-a1d6-fb31be92d59e`
-  - Added 5 new properties:
+- ✅ **Content & Creator Capture** (new database created)
+  - Database ID: `edbf92f3-d884-478a-a27e-11d1c6c929ca`
+  - Created as NEW database (separate from old CRM)
+  - Dual-purpose: Content Ideation + Creator Outreach
+  - 13 properties including:
     - Action Type (multi-select): 💡 Content Ideation | 🤝 Outreach
     - Topic Tags (multi-select): Loneliness, Telephobia, Connection, etc.
     - Relevance Score (number): 1-5 rating
-    - Content Notes (text): User's observations
+    - Content Notes (text): User's observations from share sheet
     - Ideation Status (select): New | Sent to COS | Ideas Generated
+    - Outreach Status (select): New Lead | Draft Ready | Awaiting Approval | Outreach Sent
+    - URL, Platform, Contact Method, Email, Company, Notes
 
 - ✅ **Content Ideas Queue** (new database)
   - Database ID: `dae2c9d9-83ce-46b4-be71-f057c0dc5230`
@@ -196,16 +200,16 @@
 - ✅ Added Content Notes field (captures user notes from iOS share sheet)
 - ✅ Added Ideation Status field (auto-set to "New")
 - ✅ Updated webhook path to `/wos/intent/content_capture_v1`
-- ✅ Created installation guide: `docs/COS/Content_Capture_Workflow_Update.md`
+- ✅ Fixed Notion field mappings (URL field now properly mapped)
+- ✅ Added Facebook share link handling (detects /share/v/ URLs)
+- ✅ Updated database ID to new Content & Creator Capture DB
+- ✅ Changed webhook response to simple "Added!" message
 
 **Files:**
 - Workflow JSON: `packs/P3.2/WORKFLOWS/content_capture_v1.json`
 - Update Guide: `docs/COS/Content_Capture_Workflow_Update.md`
 
-**Next Steps:**
-1. Import workflow into n8n
-2. Update iOS shortcut with new webhook URL
-3. Test with multiple content types
+**Status:** Testing with iOS shortcut in progress
 
 ---
 
