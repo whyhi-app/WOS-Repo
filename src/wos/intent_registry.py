@@ -315,5 +315,16 @@ INITIAL_INTENTS = [
         "timeout_seconds": 600,
         "execution_mode": "wos_managed",
         "notes": "WOS-managed outreach to creators/journalists. Queries CRM by status, generates personalized messages referencing original content, routes through Approval Gate, updates CRM status on approval."
+    },
+    {
+        "intent_id": "content_idea_miner_v1",
+        "name": "content_idea_miner",
+        "version": "1.0",
+        "description": "Analyze captured content and generate 2-5 content ideas using Canon",
+        "handler_module": "wos.intent_handlers.content_idea_miner",
+        "approval_required": False,
+        "timeout_seconds": 120,
+        "execution_mode": "wos_managed",
+        "notes": "COS Phase 2 - Queries Content & Creator Capture for 'Sent to COS' status, loads Brand Foundation + Content Playbook, generates 2-5 ideas using Claude, creates entries in Content Ideas Queue, updates status to 'Ideas Generated'."
     }
 ]

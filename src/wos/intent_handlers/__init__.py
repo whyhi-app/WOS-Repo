@@ -10,6 +10,7 @@ logger = logging.getLogger("wos.intent_handlers")
 
 # Import handlers as they're added
 from wos.intent_handlers.creator_outreach import create_handler as create_creator_outreach_handler
+from wos.intent_handlers.content_idea_miner import create_handler as create_content_idea_miner_handler
 
 # Handler registry - maps intent_id to handler factory
 HANDLER_REGISTRY = {
@@ -17,6 +18,11 @@ HANDLER_REGISTRY = {
         "factory": create_creator_outreach_handler,
         "name": "Creator Outreach",
         "version": "0.1",
+    },
+    "content_idea_miner_v1": {
+        "factory": create_content_idea_miner_handler,
+        "name": "Content Idea Miner",
+        "version": "1.0",
     },
     # Future handlers will be added here:
     # "brief_generator_v0": {...},
